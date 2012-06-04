@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>{% block title -%} Stacky {%- endblock %}</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',
+        filename='bootstrap/css/bootstrap.css') }}" />
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static',
+        filename='bootstrap/css/bootstrap-responsive.css') }}" />
+</head>
+<body>
+  <div class="container">
+    {% block contents %}{% endblock %}
+  </div>
+</body>
+</html>

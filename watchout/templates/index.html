@@ -1,11 +1,24 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-  <title>Stacky</title>
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static',
-        filename='bootstrap/css/bootstrap.css') }}" />
-</head>
-<body>
-  <h1>Test</h1>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block contents -%}
+<h1>Test</h1>
+<div class="row">
+  <a href="{{ url_for('form_add_task') }}"
+     class="span3 offset9 btn btn-primary btn-large">Add a task</a>
+</div>
+{% if top %}
+  <form method="post" action="{# url_for('edit_task', id=top.id) #}">
+    <time datetime="{{ top.created_at }}">
+      {{- top.elapsed.hour }}:{{ top.elapsed.minute }}:{{ top.elapsed.second -}}
+    </time>
+    <h2>{{ top.title }}</h2>
+    <textarea name="context" class="span12">{{ top.context }}</textarea>
+    <button type="submit">Revise</button>
+  </form>
+{% endif %}
+<ol>
+{% for i in stack %}
+  <li>{{ i.title }}</li>
+{% endfor %}
+</ol>
+{%- endblock %}
