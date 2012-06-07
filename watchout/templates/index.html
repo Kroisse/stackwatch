@@ -57,7 +57,8 @@ setInterval(function () {
 {% endif %}
 <ol class="tasks">
 {% for i in stack %}
-  <li>{{ i.title }}</li>
+  <li><time class="stopwatch" datetime="{{ i.created_at.isoformat() }}">
+    {{- i.elapsed|timedeltaformat -}}</time> {{ i.title -}}</li>
 {% endfor %}
 </ol>
 {%- endblock %}
