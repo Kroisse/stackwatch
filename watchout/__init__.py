@@ -1,20 +1,8 @@
-import datetime
 import iso8601
 from flask import Flask, request, render_template, url_for, redirect
 from redis import StrictRedis
 
-
-class UTC(datetime.tzinfo):
-    def utcoffset(self, dt):
-        return datetime.timedelta(0)
-
-    def dst(self, dt):
-        return datetime.timedelta(0)
-
-    def tzname(self, dt):
-        return 'UTC'
-
-utc = UTC()
+from .util import utcnow
 
 
 app = Flask(__name__)
@@ -23,7 +11,7 @@ conn = StrictRedis()
 
 @app.route('/')
 def index():
-    now = datetime.datetime.utcnow().replace(tzinfo=utc)
+    now = utcnow()
     stack_keys = conn.lrange('stack', 0, -1)
     stack = []
     for key in stack_keys:
@@ -47,7 +35,7 @@ def form_add_task():
 def add_task():
     title = request.form['title']
     context = request.form.get('context', u'')
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     key = 'tasks/{0}'.format(now.isoformat())
     conn.set(key + '/title', title)
     conn.set(key + '/context', context)
