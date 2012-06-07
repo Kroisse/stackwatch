@@ -29,15 +29,13 @@ app.jinja_env.filters['linecount'] = linecount
 def index():
     now = utcnow()
     stack_keys = conn.lrange('stack', 0, -1)
+    if not stack_keys and conn.exists('tasks/idle'):
+        stack_keys.append(conn.get('tasks/idle'))
     stack = []
     for key in stack_keys:
-        created_at = iso8601.parse_date(key[6:])
-        stack.append({
-            'id': key.rsplit('/', 1)[-1],
-            'title': unicode(conn.get(key + '/title'), 'utf-8'),
-            'context': unicode(conn.get(key + '/context'), 'utf-8'),
-            'created_at': created_at,
-            'elapsed': now - created_at})
+        task = load_task(key)
+        task['elapsed'] = now - task['created_at']
+        stack.append(task)
     stack_top = None
     if stack:
         stack_top = stack.pop(0)
@@ -54,9 +52,9 @@ def push_task():
     title = request.form['title']
     context = request.form.get('context', u'')
     now = utcnow()
-    key = 'tasks/{0}'.format(now.isoformat())
-    conn.set(key + '/title', title)
-    conn.set(key + '/context', context)
+    key = add_task(title, created_at=now, context=context)
+    if conn.llen('stack') <= 0 and conn.exists('tasks/idle'):
+        conn.set(conn.get('tasks/idle') + '/completed_at', now.isoformat())
     conn.lpush('stack', key)
     conn.rpush('archive', key)
     return redirect(url_for('index'))
@@ -74,9 +72,29 @@ def edit_task(task_id):
 
 @app.route('/tasks/pop', methods=['POST'])
 def pop_task():
-    if conn.llen('stack') <= 0:
+    stack_size = conn.llen('stack')
+    if stack_size <= 0:
         abort(400)
     key = conn.lpop('stack')
     now = utcnow()
     conn.set(key + '/completed_at', now.isoformat())
+    if conn.llen('stack') == 0:
+        key = add_task(u'Idle', created_at=now)
+        conn.set('tasks/idle', key)
     return redirect(url_for('index'))
+
+
+def add_task(title, created_at=None, context=u''):
+    created_at = created_at or utcnow()
+    key = 'tasks/{0}'.format(created_at.isoformat())
+    conn.set(key + '/title', title)
+    conn.set(key + '/context', context)
+    return key
+
+
+def load_task(key):
+    created_at = iso8601.parse_date(key[6:])
+    return {'id': key.rsplit('/', 1)[-1],
+            'title': unicode(conn.get(key + '/title'), 'utf-8'),
+            'context': unicode(conn.get(key + '/context'), 'utf-8'),
+            'created_at': created_at}
