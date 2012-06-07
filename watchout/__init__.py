@@ -39,13 +39,13 @@ def index():
     return render_template('index.html', now=now, stack=stack, top=stack_top)
 
 
-@app.route('/tasks/add')
-def form_add_task():
-    return render_template('add_task.html')
+@app.route('/tasks/push')
+def form_push_task():
+    return render_template('push_task.html')
 
 
 @app.route('/tasks', methods=['POST'])
-def add_task():
+def push_task():
     title = request.form['title']
     context = request.form.get('context', u'')
     now = utcnow()
