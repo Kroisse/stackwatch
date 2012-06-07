@@ -1,0 +1,25 @@
+
+.task {
+    margin: 1em 0;
+    padding: 1em;
+    background-color: #eee;
+    border-radius: 5px;
+}
+
+.task time {
+    font-family: monospace;
+    font-size: 1.5em;
+}
+
+.tasks {
+    margin: 0;
+    padding: 0;
+}
+
+.tasks li {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    list-style: none;
+    background-color: #eee;
+    border-radius: 5px;
+}
