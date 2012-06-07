@@ -9,6 +9,17 @@ app = Flask(__name__)
 conn = StrictRedis()
 
 
+def format_timedelta(value):
+    hours = value.seconds
+    hours, seconds = divmod(hours, 60)
+    hours, minutes = divmod(hours, 60)
+    result = '{0:02}:{1:02}:{2:02}'.format(hours, minutes, seconds)
+    if value.days > 0:
+        result = '{0} days '.format(value.days) + result
+    return result
+app.jinja_env.filters['timedeltaformat'] = format_timedelta
+
+
 @app.route('/')
 def index():
     now = utcnow()

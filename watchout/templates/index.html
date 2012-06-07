@@ -7,14 +7,16 @@
      class="span3 offset9 btn btn-primary btn-large">Add a task</a>
 </div>
 {% if top %}
+<section class="task">
+  <time class="stopwatch" datetime="{{ top.created_at.isoformat() }}">
+    {{- top.elapsed|timedeltaformat -}}
+  </time>
+  <h1>{{ top.title }}</h1>
   <form method="post" action="{# url_for('edit_task', id=top.id) #}">
-    <time datetime="{{ top.created_at }}">
-      {{- top.elapsed.hour }}:{{ top.elapsed.minute }}:{{ top.elapsed.second -}}
-    </time>
-    <h2>{{ top.title }}</h2>
     <textarea name="context" class="span12">{{ top.context }}</textarea>
     <button type="submit">Revise</button>
   </form>
+</section>
 {% endif %}
 <ol>
 {% for i in stack %}
