@@ -20,6 +20,11 @@ def format_timedelta(value):
 app.jinja_env.filters['timedeltaformat'] = format_timedelta
 
 
+def linecount(value):
+    return len(value.splitlines())
+app.jinja_env.filters['linecount'] = linecount
+
+
 @app.route('/')
 def index():
     now = utcnow()
