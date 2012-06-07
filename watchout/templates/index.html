@@ -1,7 +1,37 @@
 {% extends "base.html" %}
 
+{% block head %}
+<script>
+(function ($) {
+
+function formatTimedelta(value) {
+  value = Math.floor(value / 1000);  // cut off microsecods
+  var seconds = value % 60;
+  var minutes = Math.floor(value / 60);
+  var hours = Math.floor(minutes / 60);
+  minutes = minutes % 60;
+  return hours + ':' + minutes + ':' + seconds;
+}
+
+setInterval(function () {
+  $('time.stopwatch').html(function () {
+    var $this = $(this);
+    var timestamp = $this.data('timestamp');
+    if (!timestamp) {
+      timestamp = Date.parse($this.attr('datetime'));
+      $this.data('timestamp', timestamp);
+    }
+    var elapsed = Date.now() - timestamp;
+    return formatTimedelta(elapsed);
+  });
+}, 1000);
+
+})(jQuery);
+</script>
+{% endblock %}
+
 {% block contents -%}
-<h1>Test</h1>
+<h1>StackWatch</h1>
 <div class="row">
   <a href="{{ url_for('form_add_task') }}"
      class="span3 offset9 btn btn-primary btn-large">Add a task</a>
