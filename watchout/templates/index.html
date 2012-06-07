@@ -12,7 +12,11 @@
     {{- top.elapsed|timedeltaformat -}}
   </time>
   <h1>{{ top.title }}</h1>
-  <form method="post" action="{# url_for('edit_task', id=top.id) #}">
+  <form method="post" action="{{ url_for('pop_task') }}">
+    <button type="submit"><i class="icon-ok"></i> Done</button>
+  </form>
+  <form method="post" action="{{ url_for('edit_task', task_id=top.id) }}"
+        class="row-fluid">
     <textarea name="context" class="span12">{{ top.context }}</textarea>
     <button type="submit">Revise</button>
   </form>
