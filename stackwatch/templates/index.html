@@ -45,18 +45,24 @@ setInterval(function () {
      class="span3 offset9 btn btn-primary btn-large">Add a task</a>
 </div>
 {% if top %}
-<section class="task">
-  <time class="stopwatch" datetime="{{ top.created_at.isoformat() }}">
-    {{- top.elapsed|timedeltaformat -}}
-  </time>
-  <h1>{{ top.title }}</h1>
+<section class="task well">
+  <header class="row-fluid">
+    <h1 class="span9">{{ top.title }}</h1>
+    <div class="span3">
+      <time class="stopwatch badge badge-important" datetime="
+                   {{- top.created_at.isoformat() }}">
+        {{- top.elapsed|timedeltaformat -}}
+      </time>
+    </div>
+  </header>
   <form method="post" action="{{ url_for('pop_task') }}">
     <button type="submit"><i class="icon-ok"></i> Done</button>
   </form>
   <form method="post" action="{{ url_for('edit_task', task_id=top.id) }}"
         class="row-fluid">
     <textarea name="context" class="span12"
-              rows="{{ top.context|linecount + 2 }}">
+              rows="{{ top.context|linecount + 2 }}"
+              placeholder="Write anything you want">
       {{- top.context -}}
     </textarea>
     <button type="submit">Revise</button>
@@ -65,8 +71,10 @@ setInterval(function () {
 {% endif %}
 <ol class="tasks">
 {% for i in stack %}
-  <li><time class="stopwatch" datetime="{{ i.created_at.isoformat() }}">
-    {{- i.elapsed|timedeltaformat -}}</time> {{ i.title -}}</li>
+  <li class="well">{{- i.title }}
+    <time class="stopwatch" datetime="{{ i.created_at.isoformat() }}">
+      {{- i.elapsed|timedeltaformat -}}
+    </time></li>
 {% endfor %}
 </ol>
 {%- endblock %}
