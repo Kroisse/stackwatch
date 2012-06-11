@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block head %}
+<script src="{{ url_for('static', filename='js/underscore.string.min.js') }}"></script>
 <script>
 (function ($) {
 
@@ -10,7 +11,14 @@ function formatTimedelta(value) {
   var minutes = Math.floor(value / 60);
   var hours = Math.floor(minutes / 60);
   minutes = minutes % 60;
-  return hours + ':' + minutes + ':' + seconds;
+  var days = Math.floor(hours / 24);
+  var result = '';
+  if (days > 0) {
+    hours = hours % 24;
+    result = days + ' days ';
+  }
+  result += _.str.sprintf('%02d:%02d:%02d', hours, minutes, seconds);
+  return result;
 }
 
 setInterval(function () {
