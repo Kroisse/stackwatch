@@ -4,6 +4,7 @@
   <title>{% block title -%} StackWatch {%- endblock %}</title>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',
         filename='bootstrap/css/bootstrap.css') }}" />
+  <style>body { padding-top: 45px; }</style>
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',
         filename='bootstrap/css/bootstrap-responsive.css') }}" />
   <link rel="stylesheet" type="text/css" href="{{ url_for('static',
@@ -12,6 +13,14 @@
   {% block head %}{% endblock %}
 </head>
 <body>
+  <nav class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="/">StackWatch</a>
+        {% block navbar %}{% endblock %}
+      </div>
+    </div>
+  </nav>
   <div class="container">
     {%- block contents %}{% endblock -%}
   </div>

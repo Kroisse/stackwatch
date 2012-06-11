@@ -38,12 +38,13 @@ setInterval(function () {
 </script>
 {% endblock %}
 
+{% block navbar -%}
+<ul class="nav pull-right">
+  <li><a href="{{ url_for('form_push_task') }}">Add a task</a></li>
+</ul>
+{%- endblock %}
+
 {% block contents -%}
-<h1>StackWatch</h1>
-<div class="row-fluid">
-  <a href="{{ url_for('form_push_task') }}"
-     class="span3 offset9 btn btn-primary btn-large">Add a task</a>
-</div>
 {% if top %}
 <section class="task well">
   <header class="row-fluid">
