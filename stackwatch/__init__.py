@@ -28,18 +28,17 @@ app.jinja_env.filters['linecount'] = linecount
 @app.route('/')
 def index():
     now = utcnow()
-    stack_keys = conn.lrange('stack', 0, -1)
-    if not stack_keys and conn.exists('tasks/idle'):
-        stack_keys.append(conn.get('tasks/idle'))
-    stack = []
-    for key in stack_keys:
+    stack_top = None
+    key = conn.lindex('stack', 0)
+    if not key and conn.exists('tasks/idle'):
+        key = conn.get('tasks/idle')
+    if key:
         task = load_task(key)
         task['elapsed'] = now - task['created_at']
-        stack.append(task)
-    stack_top = None
-    if stack:
-        stack_top = stack.pop(0)
-    return render_template('index.html', now=now, stack=stack, top=stack_top)
+        stack_top = task
+    stack_size = max(0, conn.llen('stack') - 1)
+    return render_template('index.html', now=now,
+                           top=stack_top, size=stack_size)
 
 
 @app.route('/tasks/push')

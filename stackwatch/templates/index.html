@@ -48,8 +48,8 @@ setInterval(function () {
 {% if top %}
 <section class="task well">
   <header class="row-fluid">
-    <h1 class="span9">{{ top.title }}</h1>
-    <div class="span3">
+    <h1 class="span8">{{ top.title }}</h1>
+    <div class="span4">
       <time class="stopwatch badge badge-important" datetime="
                    {{- top.created_at.isoformat() }}">
         {{- top.elapsed|timedeltaformat -}}
@@ -70,12 +70,4 @@ setInterval(function () {
   </form>
 </section>
 {% endif %}
-<ol class="tasks">
-{% for i in stack %}
-  <li class="well">{{- i.title }}
-    <time class="stopwatch" datetime="{{ i.created_at.isoformat() }}">
-      {{- i.elapsed|timedeltaformat -}}
-    </time></li>
-{% endfor %}
-</ol>
 {%- endblock %}
