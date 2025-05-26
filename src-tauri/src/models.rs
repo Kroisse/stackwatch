@@ -8,7 +8,7 @@ pub struct Task {
     pub name: String,
     pub context: Option<String>,
     pub start_time: DateTime<Utc>,
-    pub total_duration: i64, // seconds
+    pub end_time: Option<DateTime<Utc>>,
     pub stack_position: i32,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,

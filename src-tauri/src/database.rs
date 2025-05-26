@@ -45,8 +45,8 @@ impl Database {
         // Insert new task
         let task_id = sqlx::query(
             r#"
-            INSERT INTO tasks (name, context, start_time, stack_position, is_active, created_at, updated_at)
-            VALUES (?1, ?2, ?3, ?4, TRUE, ?5, ?6)
+            INSERT INTO tasks (name, context, start_time, end_time, stack_position, is_active, created_at, updated_at)
+            VALUES (?1, ?2, ?3, NULL, ?4, TRUE, ?5, ?6)
             "#,
         )
         .bind(&request.name)
@@ -88,7 +88,7 @@ impl Database {
     pub async fn get_current_task(&self) -> Result<Option<Task>, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, total_duration, stack_position, is_active, created_at, updated_at
+            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
             FROM tasks
             WHERE is_active = TRUE
             ORDER BY stack_position DESC
@@ -103,7 +103,7 @@ impl Database {
     pub async fn get_task_stack(&self) -> Result<TaskStack, sqlx::Error> {
         let tasks = sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, total_duration, stack_position, is_active, created_at, updated_at
+            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
             FROM tasks
             ORDER BY stack_position DESC
             "#,
@@ -148,7 +148,7 @@ impl Database {
     async fn get_task_by_id(&self, id: i64) -> Result<Task, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, total_duration, stack_position, is_active, created_at, updated_at
+            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
             FROM tasks
             WHERE id = ?1
             "#,
@@ -161,7 +161,7 @@ impl Database {
     async fn get_previous_task(&self, current_position: i32) -> Result<Option<Task>, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, total_duration, stack_position, is_active, created_at, updated_at
+            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
             FROM tasks
             WHERE stack_position < ?1
             ORDER BY stack_position DESC
@@ -174,15 +174,10 @@ impl Database {
     }
 
     async fn pause_task(&self, task_id: i64) -> Result<(), sqlx::Error> {
-        let task = self.get_task_by_id(task_id).await?;
         let now = Utc::now();
-        let start_time = task.start_time;
 
-        let duration_seconds = (now - start_time.with_timezone(&Utc)).num_seconds();
-        let new_total_duration = task.total_duration + duration_seconds;
-
-        sqlx::query("UPDATE tasks SET total_duration = ?1, updated_at = ?2 WHERE id = ?3")
-            .bind(new_total_duration)
+        sqlx::query("UPDATE tasks SET end_time = ?1, updated_at = ?2 WHERE id = ?3")
+            .bind(now.to_rfc3339())
             .bind(now.to_rfc3339())
             .bind(task_id)
             .execute(&self.pool)
@@ -192,14 +187,22 @@ impl Database {
     }
 
     async fn resume_task(&self, task_id: i64) -> Result<(), sqlx::Error> {
+        let task = self.get_task_by_id(task_id).await?;
         let now = Utc::now();
 
+        // Create a new task session with the same name and context
         sqlx::query(
-            "UPDATE tasks SET start_time = ?1, is_active = TRUE, updated_at = ?2 WHERE id = ?3",
+            r#"
+            INSERT INTO tasks (name, context, start_time, end_time, stack_position, is_active, created_at, updated_at)
+            VALUES (?1, ?2, ?3, NULL, ?4, TRUE, ?5, ?6)
+            "#,
         )
+        .bind(&task.name)
+        .bind(&task.context)
+        .bind(now.to_rfc3339())
+        .bind(task.stack_position)
         .bind(now.to_rfc3339())
         .bind(now.to_rfc3339())
-        .bind(task_id)
         .execute(&self.pool)
         .await?;
 
