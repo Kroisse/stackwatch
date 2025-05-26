@@ -135,12 +135,15 @@
   flex: 1;
 }
 
-.push-task-form input[type="text"] {
+.push-task-form textarea {
   flex: 1;
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 50px;
 }
 
 button {
@@ -241,7 +244,7 @@ button:disabled {
     color: #aaa;
   }
 
-  .push-task-form input[type="text"] {
+  .push-task-form textarea {
     background: #2f2f2f;
     border-color: #444;
     color: #f6f6f6;

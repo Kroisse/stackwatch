@@ -4,13 +4,10 @@ import "./App.css";
 
 interface Task {
   id: number;
-  name: string;
-  context?: string;
-  start_time: string;
-  end_time?: string;
+  context: string;
   stack_position: number;
-  is_active: boolean;
   created_at: string;
+  ended_at?: string;
   updated_at: string;
 }
 
@@ -21,7 +18,7 @@ interface TaskStack {
 
 function App() {
   const [taskStack, setTaskStack] = useState<TaskStack>({ tasks: [] });
-  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskContext, setNewTaskContext] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isEditingContext, setIsEditingContext] = useState(false);
   const [editingContext, setEditingContext] = useState("");
@@ -50,14 +47,13 @@ function App() {
 
   async function pushTask(e: React.FormEvent) {
     e.preventDefault();
-    if (!newTaskName.trim()) return;
+    if (!newTaskContext.trim()) return;
 
     try {
       await invoke("push_task", {
-        name: newTaskName,
-        context: null,
+        context: newTaskContext.trim(),
       });
-      setNewTaskName("");
+      setNewTaskContext("");
       await loadTaskStack();
     } catch (error) {
       console.error("Failed to push task:", error);
@@ -79,7 +75,7 @@ function App() {
     try {
       await invoke("update_task", {
         id: taskStack.current_task.id,
-        context: editingContext || null,
+        context: editingContext,
       });
       await loadTaskStack();
       setIsEditingContext(false);
@@ -90,7 +86,7 @@ function App() {
 
   function startEditingContext() {
     if (taskStack.current_task) {
-      setEditingContext(taskStack.current_task.context || "");
+      setEditingContext(taskStack.current_task.context);
       setIsEditingContext(true);
     }
   }
@@ -101,8 +97,8 @@ function App() {
   }
 
   function calculateDuration(task: Task): string {
-    const start = new Date(task.start_time);
-    const end = task.end_time ? new Date(task.end_time) : currentTime;
+    const start = new Date(task.created_at);
+    const end = task.ended_at ? new Date(task.ended_at) : currentTime;
     const diff = end.getTime() - start.getTime();
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -112,6 +108,15 @@ function App() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
+  function getTaskDisplayName(task: Task): string {
+    return task.context.trim().split('\n')[0];
+  }
+
+  function getTaskDisplayContext(task: Task): string {
+    const lines = task.context.trim().split('\n');
+    return lines.slice(1).join('\n').trim();
+  }
+
   return (
     <main className="container">
       {/* Current Task Display */}
@@ -119,14 +124,14 @@ function App() {
         <h2>Current Task</h2>
         {taskStack.current_task ? (
           <div className="current-task">
-            <h3>{taskStack.current_task.name}</h3>
+            <h3>{getTaskDisplayName(taskStack.current_task)}</h3>
             {isEditingContext ? (
               <div className="context-edit-form">
                 <textarea
                   value={editingContext}
                   onChange={(e) => setEditingContext(e.target.value)}
-                  placeholder="Add context or notes..."
-                  rows={3}
+                  placeholder="Task name (first line)&#10;Additional context..."
+                  rows={5}
                   autoFocus
                 />
                 <div className="context-edit-buttons">
@@ -136,10 +141,10 @@ function App() {
               </div>
             ) : (
               <div className="task-context-container" onClick={startEditingContext}>
-                {taskStack.current_task.context ? (
-                  <p className="task-context">{taskStack.current_task.context}</p>
+                {getTaskDisplayContext(taskStack.current_task) ? (
+                  <p className="task-context">{getTaskDisplayContext(taskStack.current_task)}</p>
                 ) : (
-                  <p className="task-context placeholder">Click to add context...</p>
+                  <p className="task-context placeholder">Click to add more context...</p>
                 )}
               </div>
             )}
@@ -153,11 +158,11 @@ function App() {
       {/* Task Controls */}
       <div className="task-controls">
         <form onSubmit={pushTask} className="push-task-form">
-          <input
-            type="text"
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            placeholder="Enter task name..."
+          <textarea
+            value={newTaskContext}
+            onChange={(e) => setNewTaskContext(e.target.value)}
+            placeholder="Enter task (first line will be the name)..."
+            rows={2}
             required
           />
           <button type="submit">Push Task</button>
@@ -175,11 +180,11 @@ function App() {
             taskStack.tasks.map((task) => (
               <div
                 key={task.id}
-                className={`task-item ${task.is_active ? 'active' : ''}`}
+                className={`task-item ${!task.ended_at ? 'active' : ''}`}
               >
                 <div className="task-info">
-                  <h4>{task.name}</h4>
-                  {task.context && <p className="task-context">{task.context}</p>}
+                  <h4>{getTaskDisplayName(task)}</h4>
+                  {getTaskDisplayContext(task) && <p className="task-context">{getTaskDisplayContext(task)}</p>}
                 </div>
                 <div className="task-duration">
                   {calculateDuration(task)}

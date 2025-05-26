@@ -31,7 +31,7 @@ impl Database {
 
         // Get the current highest stack position
         let max_position: Option<i32> =
-            sqlx::query_scalar("SELECT MAX(stack_position) FROM tasks WHERE is_active = TRUE")
+            sqlx::query_scalar("SELECT MAX(stack_position) FROM tasks WHERE ended_at IS NULL")
                 .fetch_optional(&self.pool)
                 .await?;
 
@@ -45,13 +45,11 @@ impl Database {
         // Insert new task
         let task_id = sqlx::query(
             r#"
-            INSERT INTO tasks (name, context, start_time, end_time, stack_position, is_active, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL, ?4, TRUE, ?5, ?6)
+            INSERT INTO tasks (context, stack_position, created_at, ended_at, updated_at)
+            VALUES (?1, ?2, ?3, NULL, ?4)
             "#,
         )
-        .bind(&request.name)
         .bind(&request.context)
-        .bind(now.to_rfc3339())
         .bind(new_position)
         .bind(now.to_rfc3339())
         .bind(now.to_rfc3339())
@@ -71,10 +69,6 @@ impl Database {
 
         // Mark current task as completed
         self.pause_task(current_task.id).await?;
-        sqlx::query("UPDATE tasks SET is_active = FALSE WHERE id = ?1")
-            .bind(current_task.id)
-            .execute(&self.pool)
-            .await?;
 
         // Activate the previous task in the stack
         if let Some(previous_task) = self.get_previous_task(current_task.stack_position).await? {
@@ -88,9 +82,9 @@ impl Database {
     pub async fn get_current_task(&self) -> Result<Option<Task>, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
+            SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
-            WHERE is_active = TRUE
+            WHERE ended_at IS NULL
             ORDER BY stack_position DESC
             LIMIT 1
             "#,
@@ -103,7 +97,7 @@ impl Database {
     pub async fn get_task_stack(&self) -> Result<TaskStack, sqlx::Error> {
         let tasks = sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
+            SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
             ORDER BY stack_position DESC
             "#,
@@ -123,23 +117,12 @@ impl Database {
     pub async fn update_task(&self, request: UpdateTaskRequest) -> Result<Task, sqlx::Error> {
         let now = Utc::now();
 
-        if let Some(name) = &request.name {
-            sqlx::query("UPDATE tasks SET name = ?1, updated_at = ?2 WHERE id = ?3")
-                .bind(name)
-                .bind(now.to_rfc3339())
-                .bind(request.id)
-                .execute(&self.pool)
-                .await?;
-        }
-
-        if let Some(context) = &request.context {
-            sqlx::query("UPDATE tasks SET context = ?1, updated_at = ?2 WHERE id = ?3")
-                .bind(context)
-                .bind(now.to_rfc3339())
-                .bind(request.id)
-                .execute(&self.pool)
-                .await?;
-        }
+        sqlx::query("UPDATE tasks SET context = ?1, updated_at = ?2 WHERE id = ?3")
+            .bind(&request.context)
+            .bind(now.to_rfc3339())
+            .bind(request.id)
+            .execute(&self.pool)
+            .await?;
 
         self.get_task_by_id(request.id).await
     }
@@ -148,7 +131,7 @@ impl Database {
     async fn get_task_by_id(&self, id: i64) -> Result<Task, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
+            SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
             WHERE id = ?1
             "#,
@@ -161,7 +144,7 @@ impl Database {
     async fn get_previous_task(&self, current_position: i32) -> Result<Option<Task>, sqlx::Error> {
         sqlx::query_as::<_, Task>(
             r#"
-            SELECT id, name, context, start_time, end_time, stack_position, is_active, created_at, updated_at
+            SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
             WHERE stack_position < ?1
             ORDER BY stack_position DESC
@@ -176,7 +159,7 @@ impl Database {
     async fn pause_task(&self, task_id: i64) -> Result<(), sqlx::Error> {
         let now = Utc::now();
 
-        sqlx::query("UPDATE tasks SET end_time = ?1, updated_at = ?2 WHERE id = ?3")
+        sqlx::query("UPDATE tasks SET ended_at = ?1, updated_at = ?2 WHERE id = ?3")
             .bind(now.to_rfc3339())
             .bind(now.to_rfc3339())
             .bind(task_id)
@@ -190,16 +173,14 @@ impl Database {
         let task = self.get_task_by_id(task_id).await?;
         let now = Utc::now();
 
-        // Create a new task session with the same name and context
+        // Create a new task session with the same context
         sqlx::query(
             r#"
-            INSERT INTO tasks (name, context, start_time, end_time, stack_position, is_active, created_at, updated_at)
-            VALUES (?1, ?2, ?3, NULL, ?4, TRUE, ?5, ?6)
+            INSERT INTO tasks (context, stack_position, created_at, ended_at, updated_at)
+            VALUES (?1, ?2, ?3, NULL, ?4)
             "#,
         )
-        .bind(&task.name)
         .bind(&task.context)
-        .bind(now.to_rfc3339())
         .bind(task.stack_position)
         .bind(now.to_rfc3339())
         .bind(now.to_rfc3339())

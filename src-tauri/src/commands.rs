@@ -4,13 +4,12 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn push_task(
-    name: String,
-    context: Option<String>,
+    context: String,
     state: State<'_, AppState>,
 ) -> Result<Task, String> {
     let db = state.db.lock().await;
 
-    let request = CreateTaskRequest { name, context };
+    let request = CreateTaskRequest { context };
 
     db.push_task(request)
         .await
@@ -38,13 +37,12 @@ pub async fn get_task_stack(state: State<'_, AppState>) -> Result<TaskStack, Str
 #[tauri::command]
 pub async fn update_task(
     id: i64,
-    name: Option<String>,
-    context: Option<String>,
+    context: String,
     state: State<'_, AppState>,
 ) -> Result<Task, String> {
     let db = state.db.lock().await;
 
-    let request = UpdateTaskRequest { id, name, context };
+    let request = UpdateTaskRequest { id, context };
 
     db.update_task(request)
         .await
