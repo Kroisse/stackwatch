@@ -1,6 +1,8 @@
 use crate::models::{CreateTaskRequest, Task, TaskStack, UpdateTaskRequest};
 use chrono::Utc;
-use sqlx::SqlitePool;
+use sqlx::migrate::MigrateDatabase;
+use sqlx::sqlite::SqlitePool;
+use sqlx::Sqlite;
 
 pub struct Database {
     pool: SqlitePool,
@@ -8,29 +10,19 @@ pub struct Database {
 
 impl Database {
     pub async fn new(database_url: &str) -> Result<Self, sqlx::Error> {
-        let pool = SqlitePool::connect(database_url).await?;
-
-        // Run migrations
-        Self::run_migrations(&pool).await?;
-
-        Ok(Database { pool })
-    }
-
-    async fn run_migrations(pool: &SqlitePool) -> Result<(), sqlx::Error> {
-        // Read and execute the initial migration
-        let migration_sql = include_str!("../migrations/001_initial.sql");
-        
-        // Split by semicolon and execute each statement
-        for statement in migration_sql.split(';') {
-            let statement = statement.trim();
-            if !statement.is_empty() {
-                sqlx::query(statement)
-                    .execute(pool)
-                    .await?;
-            }
+        // Create database if it doesn't exist
+        if !Sqlite::database_exists(database_url).await.unwrap_or(false) {
+            Sqlite::create_database(database_url).await?;
         }
 
-        Ok(())
+        let pool = SqlitePool::connect(database_url).await?;
+
+        // Run migrations using sqlx's built-in migrator
+        sqlx::migrate!("./migrations")
+            .run(&pool)
+            .await?;
+
+        Ok(Database { pool })
     }
 
     // Push a new task to the stack
