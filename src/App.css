@@ -126,24 +126,8 @@
 .task-controls {
   display: flex;
   gap: 1rem;
+  justify-content: center;
   margin-bottom: 2rem;
-}
-
-.push-task-form {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.push-task-form textarea {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 50px;
 }
 
 button {
@@ -164,6 +148,24 @@ button:hover:not(:disabled) {
 button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+.push-btn {
+  background-color: #28a745;
+  min-width: 120px;
+}
+
+.push-btn:hover {
+  background-color: #218838;
+}
+
+.pop-btn {
+  background-color: #dc3545;
+  min-width: 120px;
+}
+
+.pop-btn:hover:not(:disabled) {
+  background-color: #c82333;
 }
 
 /* Task Stack Section */
@@ -244,11 +246,6 @@ button:disabled {
     color: #aaa;
   }
 
-  .push-task-form textarea {
-    background: #2f2f2f;
-    border-color: #444;
-    color: #f6f6f6;
-  }
 
   button {
     background-color: #0066cc;
@@ -300,5 +297,21 @@ button:disabled {
 
   .cancel-btn:hover {
     background-color: #5a6268;
+  }
+
+  .push-btn {
+    background-color: #28a745;
+  }
+
+  .push-btn:hover {
+    background-color: #218838;
+  }
+
+  .pop-btn {
+    background-color: #dc3545;
+  }
+
+  .pop-btn:hover:not(:disabled) {
+    background-color: #c82333;
   }
 }

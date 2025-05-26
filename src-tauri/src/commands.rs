@@ -4,7 +4,7 @@ use tauri::State;
 
 #[tauri::command]
 pub async fn push_task(
-    context: String,
+    context: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<Task, String> {
     let db = state.db.lock().await;

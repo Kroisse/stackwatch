@@ -18,7 +18,6 @@ interface TaskStack {
 
 function App() {
   const [taskStack, setTaskStack] = useState<TaskStack>({ tasks: [] });
-  const [newTaskContext, setNewTaskContext] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isEditingContext, setIsEditingContext] = useState(false);
   const [editingContext, setEditingContext] = useState("");
@@ -45,15 +44,11 @@ function App() {
     }
   }
 
-  async function pushTask(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newTaskContext.trim()) return;
-
+  async function pushTask() {
     try {
       await invoke("push_task", {
-        context: newTaskContext.trim(),
+        context: null,
       });
-      setNewTaskContext("");
       await loadTaskStack();
     } catch (error) {
       console.error("Failed to push task:", error);
@@ -157,17 +152,10 @@ function App() {
 
       {/* Task Controls */}
       <div className="task-controls">
-        <form onSubmit={pushTask} className="push-task-form">
-          <textarea
-            value={newTaskContext}
-            onChange={(e) => setNewTaskContext(e.target.value)}
-            placeholder="Enter task (first line will be the name)..."
-            rows={2}
-            required
-          />
-          <button type="submit">Push Task</button>
-        </form>
-        <button onClick={popTask} disabled={!taskStack.current_task}>
+        <button onClick={pushTask} className="push-btn">
+          Push Task
+        </button>
+        <button onClick={popTask} disabled={!taskStack.current_task} className="pop-btn">
           Pop Task
         </button>
       </div>

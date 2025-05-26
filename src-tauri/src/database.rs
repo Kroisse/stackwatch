@@ -43,13 +43,15 @@ impl Database {
         }
 
         // Insert new task
+        let context = request.context.unwrap_or_else(|| "New Task".to_string());
+        
         let task_id = sqlx::query(
             r#"
             INSERT INTO tasks (context, stack_position, created_at, ended_at, updated_at)
             VALUES (?1, ?2, ?3, NULL, ?4)
             "#,
         )
-        .bind(&request.context)
+        .bind(&context)
         .bind(new_position)
         .bind(now.to_rfc3339())
         .bind(now.to_rfc3339())
