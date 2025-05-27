@@ -42,11 +42,6 @@
   text-align: center;
 }
 
-.current-task h3 {
-  margin: 0;
-  font-size: 1.8rem;
-  color: #333;
-}
 
 .task-context {
   color: #666;
@@ -63,21 +58,6 @@
 }
 
 /* Context editing */
-.task-context-container {
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.task-context-container:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.task-context.placeholder {
-  font-style: italic;
-  opacity: 0.6;
-}
 
 .context-edit-form {
   margin: 1rem 0;
@@ -88,39 +68,25 @@
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
   font-family: inherit;
   font-size: 0.9rem;
   resize: vertical;
-  min-height: 60px;
+  min-height: 80px;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
-.context-edit-buttons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 0.5rem;
+.context-edit-form textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+  background-color: white;
 }
 
-.context-edit-buttons button {
-  padding: 0.25rem 1rem;
-  font-size: 0.9rem;
+.context-edit-form textarea::placeholder {
+  color: #999;
 }
 
-.save-btn {
-  background-color: #28a745;
-}
-
-.save-btn:hover {
-  background-color: #218838;
-}
-
-.cancel-btn {
-  background-color: #6c757d;
-}
-
-.cancel-btn:hover {
-  background-color: #5a6268;
-}
 
 /* Task Controls */
 .task-controls {
@@ -234,12 +200,9 @@ button:disabled {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
-  .current-task h3 {
-    color: #f6f6f6;
-  }
 
   .task-timer {
-    color: #f6f6f6;
+    color: #00ff88;
   }
 
   .task-context {
@@ -273,30 +236,10 @@ button:disabled {
     color: #aaa;
   }
 
-  .task-context-container:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
   .context-edit-form textarea {
     background: #2f2f2f;
     border-color: #444;
     color: #f6f6f6;
-  }
-
-  .save-btn {
-    background-color: #28a745;
-  }
-
-  .save-btn:hover {
-    background-color: #218838;
-  }
-
-  .cancel-btn {
-    background-color: #6c757d;
-  }
-
-  .cancel-btn:hover {
-    background-color: #5a6268;
   }
 
   .push-btn {

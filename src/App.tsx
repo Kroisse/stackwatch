@@ -20,7 +20,6 @@ interface TaskStack {
 function App() {
   const [taskStack, setTaskStack] = useState<TaskStack>({ tasks: [] });
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isEditingContext, setIsEditingContext] = useState(false);
   const [editingContext, setEditingContext] = useState("");
 
   // Update current time every second
@@ -30,6 +29,15 @@ function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Update editing context when current task changes
+  useEffect(() => {
+    if (taskStack.current_task) {
+      setEditingContext(taskStack.current_task.context);
+    } else {
+      setEditingContext("");
+    }
+  }, [taskStack.current_task]);
 
   // Load task stack on mount and setup event listeners
   useEffect(() => {
@@ -96,14 +104,13 @@ function App() {
 
   async function updateTaskContext() {
     if (!taskStack.current_task) return;
-    
+
     try {
       await invoke("update_task", {
         id: taskStack.current_task.id,
         context: editingContext,
       });
       // No need to manually reload - events will handle it
-      setIsEditingContext(false);
     } catch (error) {
       console.error("Failed to update task context:", error);
     }
@@ -117,27 +124,16 @@ function App() {
     }
   }
 
-  function startEditingContext() {
-    if (taskStack.current_task) {
-      setEditingContext(taskStack.current_task.context);
-      setIsEditingContext(true);
-    }
-  }
-
-  function cancelEditingContext() {
-    setIsEditingContext(false);
-    setEditingContext("");
-  }
 
   function calculateDuration(task: Task): string {
     const start = new Date(task.created_at);
     const end = task.ended_at ? new Date(task.ended_at) : currentTime;
     const diff = end.getTime() - start.getTime();
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
@@ -157,30 +153,15 @@ function App() {
         <h2>Current Task</h2>
         {taskStack.current_task ? (
           <div className="current-task">
-            <h3>{getTaskDisplayName(taskStack.current_task)}</h3>
-            {isEditingContext ? (
-              <div className="context-edit-form">
-                <textarea
-                  value={editingContext}
-                  onChange={(e) => setEditingContext(e.target.value)}
-                  placeholder="Task name (first line)&#10;Additional context..."
-                  rows={5}
-                  autoFocus
-                />
-                <div className="context-edit-buttons">
-                  <button onClick={updateTaskContext} className="save-btn">Save</button>
-                  <button onClick={cancelEditingContext} className="cancel-btn">Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div className="task-context-container" onClick={startEditingContext}>
-                {getTaskDisplayContext(taskStack.current_task) ? (
-                  <p className="task-context">{getTaskDisplayContext(taskStack.current_task)}</p>
-                ) : (
-                  <p className="task-context placeholder">Click to add more context...</p>
-                )}
-              </div>
-            )}
+            <div className="context-edit-form">
+              <textarea
+                value={editingContext}
+                onChange={(e) => setEditingContext(e.target.value)}
+                onBlur={updateTaskContext}
+                placeholder="Task name (first line)&#10;Additional context..."
+                rows={5}
+              />
+            </div>
             <p className="task-timer">{calculateDuration(taskStack.current_task)}</p>
           </div>
         ) : (
