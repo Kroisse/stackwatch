@@ -269,9 +269,9 @@ mod tests {
             task1.id, task1.stack_position, task1.context
         );
 
-        assert_eq!(task1.context, "Task 1");
+        assert_eq!(task1.title(), "Task 1");
         assert_eq!(task1.stack_position, 1);
-        assert!(task1.ended_at.is_none());
+        assert!(task1.is_active());
 
         // Verify task1 is current
         let current = db.get_current_task().await.unwrap();
@@ -286,9 +286,9 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(task2.context, "Task 2");
+        assert_eq!(task2.title(), "Task 2");
         assert_eq!(task2.stack_position, 2);
-        assert!(task2.ended_at.is_none());
+        assert!(task2.is_active());
 
         // Verify task2 is now current
         let current = db.get_current_task().await.unwrap();
@@ -298,7 +298,7 @@ mod tests {
         // Verify both tasks are active
         let stack = db.get_task_stack().await.unwrap();
         assert_eq!(stack.tasks.len(), 2);
-        assert!(stack.tasks.iter().all(|t| t.ended_at.is_none()));
+        assert!(stack.tasks.iter().all(|t| t.is_active()));
 
         // Pop current task (task2)
         let popped = db.pop_task().await.unwrap();
@@ -315,13 +315,13 @@ mod tests {
         println!("Stack after pop: {:?}", stack.tasks.len());
         for (i, task) in stack.tasks.iter().enumerate() {
             println!(
-                "Task {}: id={}, context={}, ended_at={:?}",
-                i, task.id, task.context, task.ended_at
+                "Task {}: id={}, title={}, active={}",
+                i, task.id, task.title(), task.is_active()
             );
         }
         assert_eq!(stack.tasks.len(), 1);
         assert_eq!(stack.tasks[0].id, task1.id);
-        assert!(stack.tasks[0].ended_at.is_none());
+        assert!(stack.tasks[0].is_active());
     }
 
     #[tokio::test]
@@ -335,7 +335,8 @@ mod tests {
         let result = db.pop_task().await.unwrap();
         let task = result.unwrap();
         assert!(task.context.starts_with("Idle\n"));
-        let ended_at = task.ended_at.expect("Task should be ended");
+        assert!(!task.is_active(), "Task should be ended");
+        let ended_at = task.ended_at.expect("Task should have ended_at");
         assert_eq!(ended_at, task.updated_at);
     }
 
@@ -411,7 +412,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(updated.id, task.id);
-        assert_eq!(updated.context, "Updated context");
+        assert_eq!(updated.title(), "Updated context");
         assert_eq!(updated.stack_position, task.stack_position);
     }
 
@@ -433,15 +434,15 @@ mod tests {
 
         // Verify ordering (highest stack_position first)
         assert_eq!(stack.tasks.len(), 3);
-        assert_eq!(stack.tasks[0].context, "Task 3");
+        assert_eq!(stack.tasks[0].title(), "Task 3");
         assert_eq!(stack.tasks[0].stack_position, 3);
-        assert_eq!(stack.tasks[1].context, "Task 2");
+        assert_eq!(stack.tasks[1].title(), "Task 2");
         assert_eq!(stack.tasks[1].stack_position, 2);
-        assert_eq!(stack.tasks[2].context, "Task 1");
+        assert_eq!(stack.tasks[2].title(), "Task 1");
         assert_eq!(stack.tasks[2].stack_position, 1);
 
         // Verify current task
         assert!(stack.current_task.is_some());
-        assert_eq!(stack.current_task.unwrap().context, "Task 3");
+        assert_eq!(stack.current_task.unwrap().title(), "Task 3");
     }
 }
