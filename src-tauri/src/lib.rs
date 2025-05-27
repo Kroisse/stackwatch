@@ -1,5 +1,6 @@
 mod commands;
 mod database;
+mod error;
 mod models;
 
 use database::{Database, DatabaseDelegate};
@@ -8,22 +9,22 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub use error::{Error, Result};
 
 impl DatabaseDelegate for AppHandle {
-    fn on_task_created(&self, task: &Task) -> Result<(), Error> {
+    fn on_task_created(&self, task: &Task) -> Result<()> {
         Ok(self.emit("task:created", task)?)
     }
 
-    fn on_task_popped(&self, task: &Task) -> Result<(), Error> {
+    fn on_task_popped(&self, task: &Task) -> Result<()> {
         Ok(self.emit("task:popped", task)?)
     }
 
-    fn on_task_updated(&self, task: &Task) -> Result<(), Error> {
+    fn on_task_updated(&self, task: &Task) -> Result<()> {
         Ok(self.emit("task:updated", task)?)
     }
 
-    fn on_stack_updated(&self, stack: &TaskStack) -> Result<(), Error> {
+    fn on_stack_updated(&self, stack: &TaskStack) -> Result<()> {
         Ok(self.emit("stack:updated", stack)?)
     }
 }

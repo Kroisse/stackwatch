@@ -1,5 +1,5 @@
 use crate::{
-    Error,
+    error::Result,
     models::{CreateTaskRequest, Task, TaskStack, UpdateTaskRequest},
 };
 use chrono::Utc;
@@ -8,10 +8,10 @@ use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::SqlitePool;
 
 pub trait DatabaseDelegate: Send + Sync {
-    fn on_task_created(&self, task: &Task) -> Result<(), Error>;
-    fn on_task_popped(&self, task: &Task) -> Result<(), Error>;
-    fn on_task_updated(&self, task: &Task) -> Result<(), Error>;
-    fn on_stack_updated(&self, stack: &TaskStack) -> Result<(), Error>;
+    fn on_task_created(&self, task: &Task) -> Result<()>;
+    fn on_task_popped(&self, task: &Task) -> Result<()>;
+    fn on_task_updated(&self, task: &Task) -> Result<()>;
+    fn on_stack_updated(&self, stack: &TaskStack) -> Result<()>;
 }
 
 pub struct Database {
@@ -23,7 +23,7 @@ impl Database {
     pub async fn new(
         database_url: &str,
         delegate: Box<dyn DatabaseDelegate>,
-    ) -> Result<Self, sqlx::Error> {
+    ) -> Result<Self> {
         // Create database if it doesn't exist
         if !Sqlite::database_exists(database_url).await.unwrap_or(false) {
             Sqlite::create_database(database_url).await?;
@@ -43,7 +43,7 @@ impl Database {
     /// The current task remains active and is not paused or ended.
     ///
     /// The current task is always the one with the highest stack_position.
-    pub async fn push_task(&self, request: CreateTaskRequest) -> Result<Task, sqlx::Error> {
+    pub async fn push_task(&self, request: CreateTaskRequest) -> Result<Task> {
         let now = Utc::now();
 
         // Get the current highest stack position (excluding Idle task)
@@ -96,7 +96,7 @@ impl Database {
     /// 1. Push Task1 (position=0, active)
     /// 2. Push Task2 (position=1, active) - Task1 remains active
     /// 3. Pop -> Task2 ended, Task1 becomes current (no duplication)
-    pub async fn pop_task(&self) -> Result<Option<Task>, sqlx::Error> {
+    pub async fn pop_task(&self) -> Result<Option<Task>> {
         let current_task = match self.get_current_task().await? {
             Some(task) => task,
             None => {
@@ -147,8 +147,8 @@ impl Database {
     }
 
     // Get current active task (excluding Idle task)
-    pub async fn get_current_task(&self) -> Result<Option<Task>, sqlx::Error> {
-        sqlx::query_as::<_, Task>(
+    pub async fn get_current_task(&self) -> Result<Option<Task>> {
+        Ok(sqlx::query_as::<_, Task>(
             r#"
             SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
@@ -158,11 +158,11 @@ impl Database {
             "#,
         )
         .fetch_optional(&self.pool)
-        .await
+        .await?)
     }
 
     // Get all active tasks in the stack (excluding Idle task)
-    pub async fn get_task_stack(&self) -> Result<TaskStack, sqlx::Error> {
+    pub async fn get_task_stack(&self) -> Result<TaskStack> {
         let tasks = sqlx::query_as::<_, Task>(
             r#"
             SELECT id, context, stack_position, created_at, ended_at, updated_at
@@ -183,7 +183,7 @@ impl Database {
     }
 
     // Update task context
-    pub async fn update_task(&self, request: UpdateTaskRequest) -> Result<Task, sqlx::Error> {
+    pub async fn update_task(&self, request: UpdateTaskRequest) -> Result<Task> {
         let now = Utc::now();
 
         sqlx::query("UPDATE tasks SET context = ?1, updated_at = ?2 WHERE id = ?3")
@@ -207,8 +207,8 @@ impl Database {
     }
 
     // Helper methods
-    async fn get_task_by_id(&self, id: i64) -> Result<Task, sqlx::Error> {
-        sqlx::query_as::<_, Task>(
+    async fn get_task_by_id(&self, id: i64) -> Result<Task> {
+        Ok(sqlx::query_as::<_, Task>(
             r#"
             SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
@@ -217,7 +217,7 @@ impl Database {
         )
         .bind(id)
         .fetch_one(&self.pool)
-        .await
+        .await?)
     }
 }
 
@@ -228,24 +228,24 @@ mod tests {
     struct MockDatabaseDelegate {}
 
     impl DatabaseDelegate for MockDatabaseDelegate {
-        fn on_task_created(&self, _task: &Task) -> Result<(), Error> {
+        fn on_task_created(&self, _task: &Task) -> Result<()> {
             Ok(())
         }
 
-        fn on_task_popped(&self, _task: &Task) -> Result<(), Error> {
+        fn on_task_popped(&self, _task: &Task) -> Result<()> {
             Ok(())
         }
 
-        fn on_task_updated(&self, _task: &Task) -> Result<(), Error> {
+        fn on_task_updated(&self, _task: &Task) -> Result<()> {
             Ok(())
         }
 
-        fn on_stack_updated(&self, _stack: &TaskStack) -> Result<(), Error> {
+        fn on_stack_updated(&self, _stack: &TaskStack) -> Result<()> {
             Ok(())
         }
     }
 
-    async fn create_test_database() -> Result<Database, Error> {
+    async fn create_test_database() -> Result<Database> {
         // Use an in-memory database for testing
         let delegate = MockDatabaseDelegate {};
         Ok(Database::new(":memory:", Box::new(delegate)).await?)
