@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import "./App.css";
 
 interface Task {
@@ -30,9 +31,38 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Load task stack on mount
+  // Load task stack on mount and setup event listeners
   useEffect(() => {
     loadTaskStack();
+
+    // Set up event listeners for real-time updates
+    const unlistenStackUpdated = listen<TaskStack>("stack:updated", (event) => {
+      console.log("Stack updated:", event.payload);
+      setTaskStack(event.payload);
+    });
+
+    const unlistenTaskCreated = listen<Task>("task:created", (event) => {
+      console.log("Task created:", event.payload);
+      loadTaskStack(); // Reload to ensure consistency
+    });
+
+    const unlistenTaskPopped = listen<Task>("task:popped", (event) => {
+      console.log("Task popped:", event.payload);
+      loadTaskStack(); // Reload to ensure consistency
+    });
+
+    const unlistenTaskUpdated = listen<Task>("task:updated", (event) => {
+      console.log("Task updated:", event.payload);
+      loadTaskStack(); // Reload to ensure consistency
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      unlistenStackUpdated.then(fn => fn());
+      unlistenTaskCreated.then(fn => fn());
+      unlistenTaskPopped.then(fn => fn());
+      unlistenTaskUpdated.then(fn => fn());
+    };
   }, []);
 
   async function loadTaskStack() {
@@ -49,7 +79,7 @@ function App() {
       await invoke("push_task", {
         context: null,
       });
-      await loadTaskStack();
+      // No need to manually reload - events will handle it
     } catch (error) {
       console.error("Failed to push task:", error);
     }
@@ -58,7 +88,7 @@ function App() {
   async function popTask() {
     try {
       await invoke("pop_task");
-      await loadTaskStack();
+      // No need to manually reload - events will handle it
     } catch (error) {
       console.error("Failed to pop task:", error);
     }
@@ -72,10 +102,18 @@ function App() {
         id: taskStack.current_task.id,
         context: editingContext,
       });
-      await loadTaskStack();
+      // No need to manually reload - events will handle it
       setIsEditingContext(false);
     } catch (error) {
       console.error("Failed to update task context:", error);
+    }
+  }
+
+  async function toggleFloatingWindow() {
+    try {
+      await invoke("toggle_floating_window");
+    } catch (error) {
+      console.error("Failed to toggle floating window:", error);
     }
   }
 
@@ -157,6 +195,9 @@ function App() {
         </button>
         <button onClick={popTask} disabled={!taskStack.current_task} className="pop-btn">
           Pop Task
+        </button>
+        <button onClick={toggleFloatingWindow} className="toggle-floating-btn">
+          Toggle Timer
         </button>
       </div>
 

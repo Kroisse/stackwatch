@@ -14,7 +14,22 @@
       {
         "title": "stackwatch",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "label": "main"
+      },
+      {
+        "title": "",
+        "width": 300,
+        "height": 80,
+        "label": "floating",
+        "url": "floating.html",
+        "alwaysOnTop": true,
+        "minimizable": false,
+        "closable": false,
+        "titleBarStyle": "Overlay",
+        "skipTaskbar": true,
+        "visible": false,
+        "resizable": false
       }
     ],
     "security": {

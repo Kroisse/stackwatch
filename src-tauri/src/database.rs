@@ -3,13 +3,15 @@ use chrono::Utc;
 use sqlx::migrate::MigrateDatabase;
 use sqlx::sqlite::SqlitePool;
 use sqlx::Sqlite;
+use tauri::{AppHandle, Emitter};
 
 pub struct Database {
     pool: SqlitePool,
+    app_handle: AppHandle,
 }
 
 impl Database {
-    pub async fn new(database_url: &str) -> Result<Self, sqlx::Error> {
+    pub async fn new(database_url: &str, app_handle: AppHandle) -> Result<Self, sqlx::Error> {
         // Create database if it doesn't exist
         if !Sqlite::database_exists(database_url).await.unwrap_or(false) {
             Sqlite::create_database(database_url).await?;
@@ -22,7 +24,7 @@ impl Database {
             .run(&pool)
             .await?;
 
-        Ok(Database { pool })
+        Ok(Database { pool, app_handle })
     }
 
     // Push a new task to the stack
@@ -59,7 +61,17 @@ impl Database {
         .await?
         .last_insert_rowid();
 
-        self.get_task_by_id(task_id).await
+        let task = self.get_task_by_id(task_id).await?;
+        
+        // Emit event for task creation
+        let _ = self.app_handle.emit("task:created", &task);
+        
+        // Emit event for stack update
+        if let Ok(stack) = self.get_task_stack().await {
+            let _ = self.app_handle.emit("stack:updated", &stack);
+        }
+        
+        Ok(task)
     }
 
     // Pop the current task from the stack
@@ -75,6 +87,14 @@ impl Database {
         // Activate the previous task in the stack
         if let Some(previous_task) = self.get_previous_task(current_task.stack_position).await? {
             self.resume_task(previous_task.id).await?;
+        }
+
+        // Emit event for task popped
+        let _ = self.app_handle.emit("task:popped", &current_task);
+        
+        // Emit event for stack update
+        if let Ok(stack) = self.get_task_stack().await {
+            let _ = self.app_handle.emit("stack:updated", &stack);
         }
 
         Ok(Some(current_task))
@@ -95,12 +115,13 @@ impl Database {
         .await
     }
 
-    // Get all tasks in the stack
+    // Get all active tasks in the stack
     pub async fn get_task_stack(&self) -> Result<TaskStack, sqlx::Error> {
         let tasks = sqlx::query_as::<_, Task>(
             r#"
             SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
+            WHERE ended_at IS NULL
             ORDER BY stack_position DESC
             "#,
         )
@@ -126,7 +147,17 @@ impl Database {
             .execute(&self.pool)
             .await?;
 
-        self.get_task_by_id(request.id).await
+        let task = self.get_task_by_id(request.id).await?;
+        
+        // Emit event for task update
+        let _ = self.app_handle.emit("task:updated", &task);
+        
+        // Emit event for stack update
+        if let Ok(stack) = self.get_task_stack().await {
+            let _ = self.app_handle.emit("stack:updated", &stack);
+        }
+        
+        Ok(task)
     }
 
     // Helper methods
@@ -148,7 +179,7 @@ impl Database {
             r#"
             SELECT id, context, stack_position, created_at, ended_at, updated_at
             FROM tasks
-            WHERE stack_position < ?1
+            WHERE stack_position < ?1 AND ended_at IS NULL
             ORDER BY stack_position DESC
             LIMIT 1
             "#,

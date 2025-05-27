@@ -28,3 +28,8 @@ pub struct TaskStack {
     pub tasks: Vec<Task>,
     pub current_task: Option<Task>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentTaskInfo {
+    pub task: Task,
+}

@@ -17,9 +17,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let app_handle = app.handle().clone();
+            let app_handle_for_db = app_handle.clone();
 
             tauri::async_runtime::spawn(async move {
-                let db = Database::new("sqlite://stackwatch.db")
+                let db = Database::new("sqlite://stackwatch.db", app_handle_for_db)
                     .await
                     .expect("Failed to initialize database");
 
@@ -37,7 +38,10 @@ pub fn run() {
             commands::pop_task,
             commands::get_task_stack,
             commands::update_task,
-            commands::get_current_task
+            commands::get_current_task,
+            commands::get_current_task_info,
+            commands::toggle_floating_window,
+            commands::focus_main_window
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
