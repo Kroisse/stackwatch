@@ -68,6 +68,10 @@ SQLite migrations are in `/src-tauri/migrations/`. The database is managed throu
 3. The project is mid-migration from Flask to Tauri
 4. Database operations use async Rust with tokio runtime
 5. Frontend communicates with backend via Tauri commands
+6. Files in `src-tauri/migrations` can only be modified for the most recent script.
 
 ## TypeScript Guidelines
 - Use `undefined` instead of `null` when possible in TypeScript code
+
+## Rust Development Tips
+- Use `cargo nextest run` instead of `cargo test` for better testing experience.
