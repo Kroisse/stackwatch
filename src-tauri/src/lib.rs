@@ -7,6 +7,8 @@ use std::sync::Arc;
 use tauri::Manager;
 use tokio::sync::Mutex;
 
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+
 pub struct AppState {
     pub db: Arc<Mutex<Database>>,
 }
@@ -20,7 +22,7 @@ pub fn run() {
             let app_handle_for_db = app_handle.clone();
 
             tauri::async_runtime::spawn(async move {
-                let db = Database::new("sqlite://stackwatch.db", app_handle_for_db)
+                let db = Database::new("sqlite://stackwatch.db", Box::new(app_handle_for_db))
                     .await
                     .expect("Failed to initialize database");
 
