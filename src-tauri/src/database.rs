@@ -20,10 +20,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(
-        database_url: &str,
-        delegate: Box<dyn DatabaseDelegate>,
-    ) -> Result<Self> {
+    pub async fn new(database_url: &str, delegate: Box<dyn DatabaseDelegate>) -> Result<Self> {
         // Create database if it doesn't exist
         if !Sqlite::database_exists(database_url).await.unwrap_or(false) {
             Sqlite::create_database(database_url).await?;
@@ -248,7 +245,7 @@ mod tests {
     async fn create_test_database() -> Result<Database> {
         // Use an in-memory database for testing
         let delegate = MockDatabaseDelegate {};
-        Ok(Database::new(":memory:", Box::new(delegate)).await?)
+        Database::new(":memory:", Box::new(delegate)).await
     }
 
     #[tokio::test]

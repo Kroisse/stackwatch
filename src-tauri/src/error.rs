@@ -1,57 +1,99 @@
-use std::fmt;
+use derive_more::{Display, From};
+use std::backtrace::Backtrace;
 
-pub type Result<T> = std::result::Result<T, Error>;
+pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-#[derive(Debug)]
-pub enum Error {
-    Database(sqlx::Error),
-    Migration(sqlx::migrate::MigrateError),
-    Tauri(tauri::Error),
-    Other(Box<dyn std::error::Error + Send + Sync>),
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::Database(e) => write!(f, "Database error: {}", e),
-            Error::Migration(e) => write!(f, "Migration error: {}", e),
-            Error::Tauri(e) => write!(f, "Tauri error: {}", e),
-            Error::Other(e) => write!(f, "Error: {}", e),
-        }
-    }
+#[derive(Debug, Display)]
+#[display("{kind}")]
+pub struct Error {
+    kind: ErrorKind,
+    backtrace: Backtrace,
 }
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Database(e) => Some(e),
-            Error::Migration(e) => Some(e),
-            Error::Tauri(e) => Some(e),
-            Error::Other(e) => Some(e.as_ref()),
+        self.kind.source()
+    }
+}
+
+impl Error {
+    fn new(kind: ErrorKind) -> Self {
+        Error {
+            kind,
+            backtrace: Backtrace::capture(),
+        }
+    }
+
+    pub fn backtrace(&self) -> &Backtrace {
+        &self.backtrace
+    }
+
+    // Helper methods for accessing specific error types
+    pub fn as_database_error(&self) -> Option<&sqlx::Error> {
+        match &self.kind {
+            ErrorKind::Database(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    pub fn as_migration_error(&self) -> Option<&sqlx::migrate::MigrateError> {
+        match &self.kind {
+            ErrorKind::Migration(e) => Some(e),
+            _ => None,
+        }
+    }
+
+    pub fn as_tauri_error(&self) -> Option<&tauri::Error> {
+        match &self.kind {
+            ErrorKind::Tauri(e) => Some(e),
+            _ => None,
         }
     }
 }
 
-impl From<sqlx::Error> for Error {
-    fn from(err: sqlx::Error) -> Self {
-        Error::Database(err)
+#[derive(Debug, Display, From)]
+#[non_exhaustive]
+enum ErrorKind {
+    #[display("Database error: {_0}")]
+    Database(sqlx::Error),
+
+    #[display("Migration error: {_0}")]
+    Migration(sqlx::migrate::MigrateError),
+
+    #[display("Tauri error: {_0}")]
+    Tauri(tauri::Error),
+
+    #[display("Error: {_0}")]
+    Other(Box<dyn std::error::Error + Send + Sync>),
+}
+
+impl std::error::Error for ErrorKind {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ErrorKind::Database(e) => Some(e),
+            ErrorKind::Migration(e) => Some(e),
+            ErrorKind::Tauri(e) => Some(e),
+            ErrorKind::Other(e) => Some(e.as_ref()),
+        }
     }
 }
 
-impl From<tauri::Error> for Error {
-    fn from(err: tauri::Error) -> Self {
-        Error::Tauri(err)
-    }
+// Macro to reduce boilerplate for From implementations
+macro_rules! impl_from_error {
+    ($($err_type:ty),+ $(,)?) => {
+        $(
+            impl From<$err_type> for Error {
+                fn from(err: $err_type) -> Self {
+                    Error::new(ErrorKind::from(err))
+                }
+            }
+        )+
+    };
 }
 
-impl From<sqlx::migrate::MigrateError> for Error {
-    fn from(err: sqlx::migrate::MigrateError) -> Self {
-        Error::Migration(err)
-    }
-}
-
-impl From<Box<dyn std::error::Error + Send + Sync>> for Error {
-    fn from(err: Box<dyn std::error::Error + Send + Sync>) -> Self {
-        Error::Other(err)
-    }
-}
+impl_from_error!(
+    sqlx::Error,
+    sqlx::migrate::MigrateError,
+    tauri::Error,
+    Box<dyn std::error::Error + Send + Sync>,
+);
