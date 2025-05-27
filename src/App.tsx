@@ -1,21 +1,8 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { Task, TaskStack, getTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive } from "./utils/task";
 import "./App.css";
-
-interface Task {
-  id: number;
-  context: string;
-  stack_position: number;
-  created_at: string;
-  ended_at?: string;
-  updated_at: string;
-}
-
-interface TaskStack {
-  tasks: Task[];
-  current_task?: Task;
-}
 
 function App() {
   const [taskStack, setTaskStack] = useState<TaskStack>({ tasks: [] });
@@ -126,24 +113,7 @@ function App() {
 
 
   function calculateDuration(task: Task): string {
-    const start = new Date(task.created_at);
-    const end = task.ended_at ? new Date(task.ended_at) : currentTime;
-    const diff = end.getTime() - start.getTime();
-
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  function getTaskDisplayName(task: Task): string {
-    return task.context.trim().split('\n')[0];
-  }
-
-  function getTaskDisplayContext(task: Task): string {
-    const lines = task.context.trim().split('\n');
-    return lines.slice(1).join('\n').trim();
+    return formatElapsedTime(task.created_at, task.ended_at || currentTime);
   }
 
   return (
@@ -190,11 +160,11 @@ function App() {
             taskStack.tasks.map((task) => (
               <div
                 key={task.id}
-                className={`task-item ${!task.ended_at ? 'active' : ''}`}
+                className={`task-item ${isTaskActive(task) ? 'active' : ''}`}
               >
                 <div className="task-info">
-                  <h4>{getTaskDisplayName(task)}</h4>
-                  {getTaskDisplayContext(task) && <p className="task-context">{getTaskDisplayContext(task)}</p>}
+                  <h4>{getTaskTitle(task)}</h4>
+                  {getTaskDescription(task) && <p className="task-context">{getTaskDescription(task)}</p>}
                 </div>
                 <div className="task-duration">
                   {calculateDuration(task)}

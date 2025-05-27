@@ -1,25 +1,12 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { Task, TaskStack, getTaskTitle } from './utils/task';
 import './FloatingTimer.css';
-
-interface Task {
-  id: number;
-  context: string;
-  stack_position: number;
-  created_at: string;
-  ended_at: string | null;
-  updated_at: string;
-}
 
 interface CurrentTaskInfo {
   task: Task;
   elapsed_seconds: number;
-}
-
-interface TaskStack {
-  tasks: Task[];
-  current_task?: Task;
 }
 
 function formatTime(seconds: number): string {
@@ -141,7 +128,7 @@ export function FloatingTimer() {
     };
   }, [currentTask, startTime]);
 
-  const isIdle = currentTask?.context.toLowerCase() === 'idle';
+  const isIdle = currentTask && getTaskTitle(currentTask).toLowerCase() === 'idle';
 
   return (
     <div
@@ -153,7 +140,7 @@ export function FloatingTimer() {
     >
       {currentTask ? (
         <>
-          <div className="task-context">{currentTask.context}</div>
+          <div className="task-context">{getTaskTitle(currentTask)}</div>
           <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
             {formatTime(elapsedTime)}
           </div>

@@ -71,7 +71,7 @@ SQLite migrations are in `/src-tauri/migrations/`. The database is managed throu
 6. Files in `src-tauri/migrations` can only be modified for the most recent script.
 
 ## TypeScript Guidelines
-- Use `undefined` instead of `null` when possible in TypeScript code
+- Use `undefined` instead of `null` when possible in TypeScript code. But, `== null` is preferred for checking both `null` and `undefined`.
 
 ## Rust Development Tips
 - Use `cargo nextest run` instead of `cargo test` for better testing experience.
