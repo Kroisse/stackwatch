@@ -2,12 +2,31 @@ mod commands;
 mod database;
 mod models;
 
-use database::Database;
+use database::{Database, DatabaseDelegate};
+use models::{Task, TaskStack};
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::Mutex;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
+
+impl DatabaseDelegate for AppHandle {
+    fn on_task_created(&self, task: &Task) -> Result<(), Error> {
+        Ok(self.emit("task:created", task)?)
+    }
+
+    fn on_task_popped(&self, task: &Task) -> Result<(), Error> {
+        Ok(self.emit("task:popped", task)?)
+    }
+
+    fn on_task_updated(&self, task: &Task) -> Result<(), Error> {
+        Ok(self.emit("task:updated", task)?)
+    }
+
+    fn on_stack_updated(&self, stack: &TaskStack) -> Result<(), Error> {
+        Ok(self.emit("stack:updated", stack)?)
+    }
+}
 
 pub struct AppState {
     pub db: Arc<Mutex<Database>>,
