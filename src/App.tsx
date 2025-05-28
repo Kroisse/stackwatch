@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive, Task } from "./utils/task";
+import { getDisplayTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive, Task } from "./utils/task";
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
@@ -107,7 +107,7 @@ function App() {
                 className={`task-item ${isTaskActive(task) ? 'active' : ''}`}
               >
                 <div className="task-info">
-                  <h4>{getTaskTitle(task)}</h4>
+                  <h4>{getDisplayTaskTitle(task)}</h4>
                   {getTaskDescription(task) && <p className="task-context">{getTaskDescription(task)}</p>}
                 </div>
                 <div className="task-duration">

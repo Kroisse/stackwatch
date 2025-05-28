@@ -24,24 +24,30 @@ export interface EfficientTaskStack {
 export function getTaskTitle(task: Task): string {
   // Handle leading/trailing newlines by trimming the entire context first
   const trimmedContext = task.context.trim();
-  if (!trimmedContext) return "Untitled Task";
-  
-  const firstLine = trimmedContext.split('\n')[0];
-  return firstLine.trim() || "Untitled Task";
+  if (!trimmedContext) return "";
+
+  // Use regex to extract first line more efficiently
+  const firstLineMatch = trimmedContext.match(/^[^\n]*/);
+  return firstLineMatch ? firstLineMatch[0].trim() : "";
+}
+
+// Helper function for displaying task title with fallback
+export function getDisplayTaskTitle(task: Task): string {
+  const title = getTaskTitle(task);
+  return title || "Untitled Task";
 }
 
 export function getTaskDescription(task: Task): string {
   // Handle leading/trailing newlines by trimming the entire context first
   const trimmedContext = task.context.trim();
   if (!trimmedContext) return "";
-  
-  const lines = trimmedContext.split('\n');
-  if (lines.length <= 1) return "";
 
-  // Join all lines after the first one
-  const description = lines.slice(1).join('\n');
-  // Remove leading newline if present
-  return description.replace(/^\n/, '');
+  // Use regex to extract everything after the first line more efficiently
+  const descriptionMatch = trimmedContext.match(/^[^\n]*\n(.*)$/s);
+  if (!descriptionMatch) return ""; // No newline found, single line
+
+  // Remove leading newline if present (preserve existing behavior)
+  return descriptionMatch[1].replace(/^\n/, '');
 }
 
 export function isTaskActive(task: Task): boolean {

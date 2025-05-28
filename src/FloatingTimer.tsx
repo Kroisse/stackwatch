@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Task, getTaskTitle } from './utils/task';
+import { Task, getTaskTitle, getDisplayTaskTitle } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
 import { Temporal } from '@js-temporal/polyfill';
 import './FloatingTimer.css';
@@ -131,7 +131,7 @@ export function FloatingTimer() {
     >
       {currentTask ? (
         <>
-          <div className="task-context">{getTaskTitle(currentTask)}</div>
+          <div className="task-context">{getDisplayTaskTitle(currentTask)}</div>
           <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
             {formatTime(elapsedTime)}
           </div>

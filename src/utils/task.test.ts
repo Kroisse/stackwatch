@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import {
   getTaskTitle,
+  getDisplayTaskTitle,
   getTaskDescription,
   isTaskActive,
   formatElapsedTime,
@@ -38,16 +39,16 @@ describe('Task utility functions', () => {
       expect(result).toBe('Spaced title');
     });
 
-    it('should return "Untitled Task" for empty context', () => {
+    it('should return empty string for empty context', () => {
       const emptyTask = { ...mockTask, context: '' };
       const result = getTaskTitle(emptyTask);
-      expect(result).toBe('Untitled Task');
+      expect(result).toBe('');
     });
 
-    it('should return "Untitled Task" for whitespace-only context', () => {
+    it('should return empty string for whitespace-only context', () => {
       const whitespaceTask = { ...mockTask, context: '   \n  \t  ' };
       const result = getTaskTitle(whitespaceTask);
-      expect(result).toBe('Untitled Task');
+      expect(result).toBe('');
     });
 
     it('should handle single line context', () => {
@@ -60,6 +61,25 @@ describe('Task utility functions', () => {
       const singleLineTask = { ...mockTask, context: '\nOnly title\n' };
       const result = getTaskTitle(singleLineTask);
       expect(result).toBe('Only title');
+    });
+  });
+
+  describe('getDisplayTaskTitle', () => {
+    it('should return the title when available', () => {
+      const result = getDisplayTaskTitle(mockTask);
+      expect(result).toBe('First line title');
+    });
+
+    it('should return "Untitled Task" for empty context', () => {
+      const emptyTask = { ...mockTask, context: '' };
+      const result = getDisplayTaskTitle(emptyTask);
+      expect(result).toBe('Untitled Task');
+    });
+
+    it('should return "Untitled Task" for whitespace-only context', () => {
+      const whitespaceTask = { ...mockTask, context: '   \n  \t  ' };
+      const result = getDisplayTaskTitle(whitespaceTask);
+      expect(result).toBe('Untitled Task');
     });
   });
 
