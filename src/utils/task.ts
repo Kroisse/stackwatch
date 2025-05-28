@@ -1,10 +1,12 @@
+import { Temporal } from '@js-temporal/polyfill';
+
 export interface Task {
   id: number;
   context: string;
   stack_position: number;
-  created_at: string;
-  ended_at?: string;
-  updated_at: string;
+  created_at: Temporal.Instant;
+  ended_at?: Temporal.Instant;
+  updated_at: Temporal.Instant;
 }
 
 export interface TaskStack {
@@ -20,7 +22,7 @@ export function getTaskTitle(task: Task): string {
 export function getTaskDescription(task: Task): string {
   const lines = task.context.split('\n');
   if (lines.length <= 1) return "";
-  
+
   // Join all lines after the first one
   const description = lines.slice(1).join('\n');
   // Remove leading newline if present
@@ -31,16 +33,14 @@ export function isTaskActive(task: Task): boolean {
   return task.ended_at == null;
 }
 
-export function formatElapsedTime(startTime: Date | string, endTime?: Date | string): string {
-  const start = typeof startTime === 'string' ? new Date(startTime) : startTime;
-  const end = endTime 
-    ? (typeof endTime === 'string' ? new Date(endTime) : endTime)
-    : new Date();
-  
-  const elapsed = Math.floor((end.getTime() - start.getTime()) / 1000);
-  const hours = Math.floor(elapsed / 3600);
-  const minutes = Math.floor((elapsed % 3600) / 60);
-  const seconds = elapsed % 60;
-  
+export function formatElapsedTime(startTime: Temporal.Instant, endTime?: Temporal.Instant): string {
+  const end = endTime || Temporal.Now.instant();
+
+  const duration = end.since(startTime);
+
+  const hours = Math.floor(duration.total('hours'));
+  const minutes = Math.floor(duration.total('minutes')) % 60;
+  const seconds = Math.floor(duration.total('seconds')) % 60;
+
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }

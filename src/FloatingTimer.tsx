@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Task, TaskStack, getTaskTitle } from './utils/task';
+import { Temporal } from '@js-temporal/polyfill';
 import './FloatingTimer.css';
 
 interface CurrentTaskInfo {
@@ -22,7 +23,7 @@ function formatTime(seconds: number): string {
 
 export function FloatingTimer() {
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState<Temporal.Instant | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -63,7 +64,7 @@ export function FloatingTimer() {
         const info = await invoke<CurrentTaskInfo | null>('get_current_task_info');
         if (info) {
           setCurrentTask(info.task);
-          setStartTime(new Date(info.task.created_at));
+          setStartTime(info.task.created_at);
           setElapsedTime(info.elapsed_seconds);
         } else {
           setCurrentTask(null);
@@ -88,11 +89,11 @@ export function FloatingTimer() {
         const stack = event.payload;
         if (stack.current_task) {
           setCurrentTask(stack.current_task);
-          setStartTime(new Date(stack.current_task.created_at));
-          // Calculate initial elapsed time
-          const now = new Date();
-          const start = new Date(stack.current_task.created_at);
-          setElapsedTime(Math.floor((now.getTime() - start.getTime()) / 1000));
+          setStartTime(stack.current_task.created_at);
+          // Calculate initial elapsed time using Temporal
+          const now = Temporal.Now.instant();
+          const duration = now.since(stack.current_task.created_at);
+          setElapsedTime(Math.floor(duration.total('seconds')));
         } else {
           setCurrentTask(null);
           setStartTime(null);
@@ -115,9 +116,9 @@ export function FloatingTimer() {
 
     if (currentTask && startTime) {
       intervalId = setInterval(() => {
-        const now = new Date();
-        const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-        setElapsedTime(elapsed);
+        const now = Temporal.Now.instant();
+        const duration = now.since(startTime);
+        setElapsedTime(Math.floor(duration.total('seconds')));
       }, 1000);
     }
 

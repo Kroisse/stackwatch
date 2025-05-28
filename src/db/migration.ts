@@ -1,6 +1,19 @@
 import { invoke } from '@tauri-apps/api/core';
 import { StackWatchDatabase } from './database';
-import { TaskStack } from '../utils/task';
+
+interface RawTask {
+  id: number;
+  context: string;
+  stack_position: number;
+  created_at: string;
+  ended_at?: string;  // active tasks don't have ended_at
+  updated_at: string;
+}
+
+interface RawTaskStack {
+  tasks: RawTask[];
+  current_task?: RawTask;  // optional, may not exist
+}
 
 export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
   try {
@@ -12,8 +25,8 @@ export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
     }
 
     // Get all tasks from SQLite through Tauri
-    const response = await invoke<TaskStack>('get_task_stack');
-    
+    const response = await invoke<RawTaskStack>('get_task_stack');
+
     // No data to migrate
     if (!response.tasks || response.tasks.length === 0) {
       // Create initial idle task
@@ -22,18 +35,18 @@ export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
     }
 
     // Migrate all tasks (avoiding duplicates)
-    const taskMap = new Map<number, typeof response.tasks[0]>();
-    
+    const taskMap = new Map<number, RawTask>();
+
     // Add all tasks to map to deduplicate by ID
     for (const task of response.tasks) {
       taskMap.set(task.id, task);
     }
-    
+
     // Also add current_task if it exists and not already in map
     if (response.current_task) {
       taskMap.set(response.current_task.id, response.current_task);
     }
-    
+
     // Now migrate deduplicated tasks
     await db.transaction('rw', db.tasks, async () => {
       for (const task of taskMap.values()) {

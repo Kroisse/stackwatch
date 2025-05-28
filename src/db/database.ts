@@ -93,7 +93,7 @@ export class StackWatchDatabase extends Dexie {
       updated_at: now
     });
 
-    return { ...currentTask, ended_at: now.toISOString(), updated_at: now.toISOString() };
+    return { ...currentTask, ended_at: now.toTemporalInstant(), updated_at: now.toTemporalInstant() };
   }
 
   // Update task context
@@ -138,9 +138,9 @@ export class StackWatchDatabase extends Dexie {
       id: dbTask.id,
       context: dbTask.context,
       stack_position: dbTask.stack_position,
-      created_at: dbTask.created_at.toISOString(),
-      ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at.toISOString(),
-      updated_at: dbTask.updated_at.toISOString()
+      created_at: dbTask.created_at.toTemporalInstant(),
+      ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at.toTemporalInstant(),
+      updated_at: dbTask.updated_at.toTemporalInstant()
     };
   }
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive } from "./utils/task";
+import { getTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive, Task } from "./utils/task";
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
@@ -8,20 +8,11 @@ import "./App.css";
 function App() {
   const db = useDatabase();
   const { taskStack, pushTask, popTask, updateTask } = useTaskStack();
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [editingContext, setEditingContext] = useState("");
   // Run migration on first load
   useEffect(() => {
     migrateFromSQLite(db).catch(console.error);
   }, [db]);
-
-  // Update current time every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Update editing context when current task changes
   useEffect(() => {
@@ -65,8 +56,8 @@ function App() {
   };
 
 
-  function calculateDuration(task: any): string {
-    return formatElapsedTime(task.created_at, task.ended_at || currentTime);
+  function calculateDuration(task: Task): string {
+    return formatElapsedTime(task.created_at, task.ended_at);
   }
 
   return (
@@ -85,7 +76,7 @@ function App() {
                 rows={5}
               />
             </div>
-            <p className="task-timer">{calculateDuration(taskStack.current_task)}</p>
+            <p className="task-timer">{taskStack.current_task ? calculateDuration(taskStack.current_task) : ''}</p>
           </div>
         ) : (
           <p>No active task</p>
