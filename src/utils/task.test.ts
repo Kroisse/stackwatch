@@ -55,6 +55,12 @@ describe('Task utility functions', () => {
       const result = getTaskTitle(singleLineTask);
       expect(result).toBe('Only title');
     });
+
+    it('should handle single line context with leading/trailing newlines', () => {
+      const singleLineTask = { ...mockTask, context: '\nOnly title\n' };
+      const result = getTaskTitle(singleLineTask);
+      expect(result).toBe('Only title');
+    });
   });
 
   describe('getTaskDescription', () => {

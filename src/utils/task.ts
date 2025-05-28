@@ -22,12 +22,20 @@ export interface EfficientTaskStack {
 }
 
 export function getTaskTitle(task: Task): string {
-  const firstLine = task.context.split('\n')[0];
+  // Handle leading/trailing newlines by trimming the entire context first
+  const trimmedContext = task.context.trim();
+  if (!trimmedContext) return "Untitled Task";
+  
+  const firstLine = trimmedContext.split('\n')[0];
   return firstLine.trim() || "Untitled Task";
 }
 
 export function getTaskDescription(task: Task): string {
-  const lines = task.context.split('\n');
+  // Handle leading/trailing newlines by trimming the entire context first
+  const trimmedContext = task.context.trim();
+  if (!trimmedContext) return "";
+  
+  const lines = trimmedContext.split('\n');
   if (lines.length <= 1) return "";
 
   // Join all lines after the first one
