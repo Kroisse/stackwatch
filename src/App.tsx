@@ -4,6 +4,7 @@ import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
 import { useCurrentTime } from "./hooks/useCurrentTime";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const { taskStack, pushTask, popTask, updateTask } = useTaskStack();
   const [editingContext, setEditingContext] = useState("");
   const currentTime = useCurrentTime();
+  const [floatingWindow, setFloatingWindow] = useState<Window | null>(null);
 
   // Run migration on first load
   useEffect(() => {
@@ -77,9 +79,36 @@ function App() {
     }
   }
 
-  // TODO: Implement floating window toggle for Tauri
-  const toggleFloatingWindow = () => {
-    console.log("Floating window toggle not yet implemented");
+  const toggleFloatingWindow = async () => {
+    try {
+      // Check if we're in Tauri environment
+      if ('__TAURI__' in window) {
+        await invoke("toggle_floating_window");
+      } else {
+        // In web environment, use window.open
+        if (floatingWindow && !floatingWindow.closed) {
+          // Close existing window
+          floatingWindow.close();
+          setFloatingWindow(null);
+        } else {
+          // Open new window
+          const width = 200;
+          const height = 60;
+          const left = window.screen.width - width - 20;
+          const top = 20;
+          
+          const newWindow = window.open(
+            '/floating.html',
+            'stackwatch-floating',
+            `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,resizable=no`
+          );
+          
+          setFloatingWindow(newWindow);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to toggle floating window:", error);
+    }
   };
 
 
