@@ -30,6 +30,15 @@ npm run tauri dev
 
 # Build production app
 npm run tauri build
+
+# Run tests
+npm run test
+
+# Run tests once (CI mode)
+npm run test:run
+
+# Run tests with UI
+npm run test:ui
 ```
 
 ### Backend (Rust)
@@ -64,7 +73,7 @@ SQLite migrations are in `/src-tauri/migrations/`. The database is managed throu
 ## Development Notes
 
 1. TypeScript is in strict mode with unused variable/parameter checks
-2. No linting or test commands are currently configured
+2. Tests are set up with Vitest and can be run with `npm run test`
 3. The project is mid-migration from Flask to Tauri
 4. Database operations use async Rust with tokio runtime
 5. Frontend communicates with backend via Tauri commands
