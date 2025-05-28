@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Task, getTaskTitle, getDisplayTaskTitle, formatDuration } from './utils/task';
+import { Task, getTaskTitle, getDisplayTaskTitle, formatElapsedTime } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
-import { Temporal } from '@js-temporal/polyfill';
 import './FloatingTimer.css';
 
 export function FloatingTimer() {
   const db = useDatabase();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [startTime, setStartTime] = useState<Temporal.Instant | null>(null);
-  const [duration, setDuration] = useState<Temporal.Duration>(Temporal.Duration.from({ seconds: 0 }));
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<string>('00:00:00');
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -46,13 +45,11 @@ export function FloatingTimer() {
         setCurrentTask(task);
         setStartTime(task.created_at);
         // Calculate elapsed time
-        const now = Temporal.Now.instant();
-        const elapsed = now.since(task.created_at);
-        setDuration(elapsed);
+        setElapsedTime(formatElapsedTime(task.created_at));
       } else {
         setCurrentTask(null);
         setStartTime(null);
-        setDuration(Temporal.Duration.from({ seconds: 0 }));
+        setElapsedTime('00:00:00');
       }
     } catch (error) {
       console.error('Failed to fetch current task:', error);
@@ -94,9 +91,7 @@ export function FloatingTimer() {
 
     if (currentTask && startTime) {
       intervalId = setInterval(() => {
-        const now = Temporal.Now.instant();
-        const elapsed = now.since(startTime);
-        setDuration(elapsed);
+        setElapsedTime(formatElapsedTime(startTime));
       }, 1000);
     }
 
@@ -121,7 +116,7 @@ export function FloatingTimer() {
         <>
           <div className="task-context">{getDisplayTaskTitle(currentTask)}</div>
           <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
-            {formatDuration(duration)}
+            {elapsedTime}
           </div>
         </>
       ) : (

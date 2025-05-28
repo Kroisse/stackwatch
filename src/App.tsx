@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { getDisplayTaskTitle, getTaskDescription, formatDuration, isTaskActive, Task } from "./utils/task";
-import { Temporal } from "@js-temporal/polyfill";
+import { getDisplayTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive, Task } from "./utils/task";
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
@@ -58,9 +57,7 @@ function App() {
 
 
   function calculateDuration(task: Task): string {
-    const end = task.ended_at || Temporal.Now.instant();
-    const duration = end.since(task.created_at);
-    return formatDuration(duration);
+    return formatElapsedTime(task.created_at, task.ended_at);
   }
 
   return (

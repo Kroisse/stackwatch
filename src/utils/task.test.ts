@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Temporal } from '@js-temporal/polyfill';
 import {
   getTaskTitle,
   getDisplayTaskTitle,
@@ -11,10 +10,10 @@ import {
 
 describe('Task utility functions', () => {
   let mockTask: Task;
-  let now: Temporal.Instant;
+  let now: Date;
 
   beforeEach(() => {
-    now = Temporal.Now.instant();
+    now = new Date();
     mockTask = {
       id: 1,
       context: 'First line title\nSecond line description\nThird line',
@@ -143,39 +142,39 @@ describe('Task utility functions', () => {
 
   describe('formatDuration', () => {
     it('should format duration correctly for hours, minutes, and seconds', () => {
-      const duration = Temporal.Duration.from({ hours: 1, minutes: 1, seconds: 1 });
-      const result = formatDuration(duration);
+      const totalSeconds = 3661; // 1 hour, 1 minute, 1 second
+      const result = formatDuration(totalSeconds);
       expect(result).toBe('01:01:01');
     });
 
     it('should handle zero paddings correctly', () => {
-      const duration = Temporal.Duration.from({ hours: 1, minutes: 1, seconds: 5 });
-      const result = formatDuration(duration);
+      const totalSeconds = 3665; // 1 hour, 1 minute, 5 seconds
+      const result = formatDuration(totalSeconds);
       expect(result).toBe('01:01:05');
     });
 
     it('should handle large hour values', () => {
-      const duration = Temporal.Duration.from({ hours: 25, minutes: 30, seconds: 45 });
-      const result = formatDuration(duration);
+      const totalSeconds = 91845; // 25 hours, 30 minutes, 45 seconds
+      const result = formatDuration(totalSeconds);
       expect(result).toBe('25:30:45');
     });
 
     it('should handle durations less than an hour', () => {
-      const duration = Temporal.Duration.from({ minutes: 25, seconds: 30 });
-      const result = formatDuration(duration);
+      const totalSeconds = 1530; // 25 minutes, 30 seconds
+      const result = formatDuration(totalSeconds);
       expect(result).toBe('00:25:30');
     });
 
     it('should handle durations less than a minute', () => {
-      const duration = Temporal.Duration.from({ seconds: 45 });
-      const result = formatDuration(duration);
+      const totalSeconds = 45;
+      const result = formatDuration(totalSeconds);
       expect(result).toBe('00:00:45');
     });
 
-    it('should handle fractional seconds by flooring', () => {
-      const duration = Temporal.Duration.from({ minutes: 1, seconds: 1, milliseconds: 700 });
-      const result = formatDuration(duration);
-      expect(result).toBe('00:01:01'); // Should floor to 1 second
+    it('should handle zero seconds', () => {
+      const totalSeconds = 0;
+      const result = formatDuration(totalSeconds);
+      expect(result).toBe('00:00:00');
     });
   });
 

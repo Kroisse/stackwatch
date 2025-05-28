@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/core';
 import { StackWatchDatabase } from './database';
 
 interface RawTask {
@@ -17,6 +16,7 @@ interface RawTaskStack {
 
 export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
   try {
+    const { invoke } = await import('@tauri-apps/api/core');
     // Check if we already have data in IndexedDB
     const existingCount = await db.tasks.count();
     if (existingCount > 0) {

@@ -1,12 +1,10 @@
-import { Temporal } from '@js-temporal/polyfill';
-
 export interface Task {
   id: number;
   context: string;
   stack_position: number;
-  created_at: Temporal.Instant;
-  ended_at?: Temporal.Instant;
-  updated_at: Temporal.Instant;
+  created_at: Date;
+  ended_at?: Date;
+  updated_at: Date;
 }
 
 export interface TaskStack {
@@ -55,14 +53,28 @@ export function isTaskActive(task: Task): boolean {
 }
 
 /**
- * Format a duration as HH:MM:SS
- * @param duration - Duration to format
+ * Format elapsed time between two dates as HH:MM:SS
+ * @param startDate - Start date
+ * @param endDate - End date (defaults to now)
  * @returns Formatted string as HH:MM:SS
  */
-export function formatDuration(duration: Temporal.Duration): string {
-  const hours = Math.floor(duration.total('hours'));
-  const minutes = Math.floor(duration.total('minutes')) % 60;
-  const seconds = Math.floor(duration.total('seconds')) % 60;
+export function formatElapsedTime(startDate: Date, endDate?: Date): string {
+  const end = endDate || new Date();
+  const diffMs = end.getTime() - startDate.getTime();
+  
+  const totalSeconds = Math.floor(diffMs / 1000);
+  return formatDuration(totalSeconds);
+}
+
+/**
+ * Format duration in seconds as HH:MM:SS
+ * @param totalSeconds - Total seconds
+ * @returns Formatted string as HH:MM:SS
+ */
+export function formatDuration(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }

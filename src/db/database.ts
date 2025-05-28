@@ -1,6 +1,5 @@
 import Dexie, { Table } from 'dexie';
 import { Task } from '../utils/task';
-import { Temporal } from '@js-temporal/polyfill';
 import { BroadcastMessage } from '../types/broadcast';
 
 export interface DBTask {
@@ -38,7 +37,7 @@ export class StackWatchDatabase extends Dexie {
   // Get current active task (highest stack_position with no ended_at)
   async getCurrentTask(): Promise<Task | undefined> {
     // Use index to get active tasks efficiently
-    const activeTasks = await this.tasks
+    const activeTasks = this.tasks
       .where('ended_at')
       .equals(0);
 
@@ -72,7 +71,7 @@ export class StackWatchDatabase extends Dexie {
     const now = new Date();
 
     // Get highest stack position
-    const activeTasks = await this.tasks
+    const activeTasks = this.tasks
       .where('ended_at')
       .equals(0);
 
@@ -96,13 +95,13 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-created',
       task: task,
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     // Broadcast stack update event
     this.broadcast({
       type: 'stack-updated',
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     return task;
@@ -119,19 +118,19 @@ export class StackWatchDatabase extends Dexie {
       updated_at: now
     });
 
-    const poppedTask = { ...currentTask, ended_at: now.toTemporalInstant(), updated_at: now.toTemporalInstant() };
+    const poppedTask = { ...currentTask, ended_at: now, updated_at: now };
 
     // Broadcast task popped event
     this.broadcast({
       type: 'task-popped',
       task: poppedTask,
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     // Broadcast stack update event
     this.broadcast({
       type: 'stack-updated',
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     return poppedTask;
@@ -155,13 +154,13 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-updated',
       task: updatedTask,
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     // Broadcast stack update event
     this.broadcast({
       type: 'stack-updated',
-      timestamp: Temporal.Now.instant()
+      timestamp: new Date()
     });
 
     return updatedTask;
@@ -194,9 +193,9 @@ export class StackWatchDatabase extends Dexie {
       id: dbTask.id,
       context: dbTask.context,
       stack_position: dbTask.stack_position,
-      created_at: dbTask.created_at.toTemporalInstant(),
-      ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at.toTemporalInstant(),
-      updated_at: dbTask.updated_at.toTemporalInstant()
+      created_at: dbTask.created_at,
+      ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at,
+      updated_at: dbTask.updated_at
     };
   }
 
