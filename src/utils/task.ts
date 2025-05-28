@@ -54,9 +54,14 @@ export function isTaskActive(task: Task): boolean {
   return task.ended_at == null;
 }
 
+/**
+ * Format elapsed time from start to end (or current time)
+ * @param startTime - Start time as Temporal.Instant
+ * @param endTime - Optional end time as Temporal.Instant
+ * @returns Formatted string as HH:MM:SS
+ */
 export function formatElapsedTime(startTime: Temporal.Instant, endTime?: Temporal.Instant): string {
   const end = endTime || Temporal.Now.instant();
-
   const duration = end.since(startTime);
 
   const hours = Math.floor(duration.total('hours'));
