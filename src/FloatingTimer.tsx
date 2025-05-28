@@ -8,6 +8,7 @@ export function FloatingTimer() {
   const db = useDatabase();
   const currentTime = useCurrentTime();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  const [idleStartTime, setIdleStartTime] = useState<Date | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -46,6 +47,17 @@ export function FloatingTimer() {
       console.error('Failed to fetch current task:', error);
     }
   };
+
+  // Update idle start time when current task changes
+  useEffect(() => {
+    if (!currentTask) {
+      // Just became idle - reset to current time
+      setIdleStartTime(new Date());
+    } else {
+      // Not idle anymore
+      setIdleStartTime(null);
+    }
+  }, [currentTask]);
 
   // Load initial task info
   useEffect(() => {
@@ -104,7 +116,9 @@ export function FloatingTimer() {
       ) : (
         <>
           <div className="task-context">Idle</div>
-          <div className="elapsed-time idle">00:00:00</div>
+          <div className="elapsed-time idle">
+            {idleStartTime ? formatElapsedTime(idleStartTime, currentTime) : '00:00:00'}
+          </div>
         </>
       )}
     </div>
