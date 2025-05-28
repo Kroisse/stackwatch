@@ -98,12 +98,6 @@ export class StackWatchDatabase extends Dexie {
       timestamp: new Date()
     });
 
-    // Broadcast stack update event
-    this.broadcast({
-      type: 'stack-updated',
-      timestamp: new Date()
-    });
-
     return task;
   }
 
@@ -124,12 +118,6 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-popped',
       task: poppedTask,
-      timestamp: new Date()
-    });
-
-    // Broadcast stack update event
-    this.broadcast({
-      type: 'stack-updated',
       timestamp: new Date()
     });
 
@@ -154,12 +142,6 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-updated',
       task: updatedTask,
-      timestamp: new Date()
-    });
-
-    // Broadcast stack update event
-    this.broadcast({
-      type: 'stack-updated',
       timestamp: new Date()
     });
 

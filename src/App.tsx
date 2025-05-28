@@ -14,7 +14,17 @@ function App() {
 
   // Run migration on first load
   useEffect(() => {
-    migrateFromSQLite(db).catch(console.error);
+    const abortController = new AbortController();
+    
+    migrateFromSQLite(db, abortController.signal).catch(error => {
+      if (error.name !== 'AbortError') {
+        console.error('Migration failed:', error);
+      }
+    });
+
+    return () => {
+      abortController.abort();
+    };
   }, [db]);
 
   // Update editing context when current task changes

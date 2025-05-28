@@ -14,9 +14,16 @@ interface RawTaskStack {
   current_task?: RawTask;  // optional, may not exist
 }
 
-export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
+export async function migrateFromSQLite(db: StackWatchDatabase, signal?: AbortSignal): Promise<void> {
   try {
+    // Check if already aborted
+    signal?.throwIfAborted();
+
     const { invoke } = await import('@tauri-apps/api/core');
+    
+    // Check again after async import
+    signal?.throwIfAborted();
+
     // Check if we already have data in IndexedDB
     const existingCount = await db.tasks.count();
     if (existingCount > 0) {
@@ -26,6 +33,9 @@ export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
 
     // Get all tasks from SQLite through Tauri
     const response = await invoke<RawTaskStack>('get_task_stack');
+
+    // Check if aborted after invoke
+    signal?.throwIfAborted();
 
     // No data to migrate
     if (!response.tasks || response.tasks.length === 0) {
@@ -50,6 +60,9 @@ export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
     // Now migrate deduplicated tasks
     await db.transaction('rw', db.tasks, async () => {
       for (const task of taskMap.values()) {
+        // Check if aborted during transaction
+        signal?.throwIfAborted();
+        
         await db.tasks.add({
           context: task.context,
           stack_position: task.stack_position,
@@ -62,8 +75,13 @@ export async function migrateFromSQLite(db: StackWatchDatabase): Promise<void> {
 
     console.log(`Migrated ${taskMap.size} unique tasks from SQLite to IndexedDB`);
   } catch (error) {
+    // If it's an abort error, just re-throw it
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
+    
     console.error('Migration failed:', error);
-    // Create idle task anyway
+    // Create idle task anyway for other errors
     await db.checkIdleTask();
   }
 }
