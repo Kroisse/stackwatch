@@ -29,17 +29,17 @@ export class StackWatchDatabase extends Dexie {
     // Use index to get active tasks efficiently
     const activeTasks = await this.tasks
       .where('ended_at')
-      .equals(0)
-      .toArray();
-
-    if (activeTasks.length === 0) return undefined;
+      .equals(0);
 
     // Find task with highest stack_position
-    const currentTask = activeTasks.reduce((highest, task) =>
-      task.stack_position > highest.stack_position ? task : highest
-    );
+    let highestTask: DBTask | undefined;
+    await activeTasks.each((task) => {
+      if (!highestTask || task.stack_position > highestTask.stack_position) {
+        highestTask = task;
+      }
+    });
 
-    return this.dbTaskToTask(currentTask);
+    return highestTask && this.dbTaskToTask(highestTask);
   }
 
   // Get all active tasks in stack order
@@ -48,10 +48,10 @@ export class StackWatchDatabase extends Dexie {
     const activeTasks = await this.tasks
       .where('ended_at')
       .equals(0)
-      .toArray();
+      .sortBy('stack_position');
 
     // Sort by stack_position descending
-    activeTasks.sort((a, b) => b.stack_position - a.stack_position);
+    activeTasks.reverse();
 
     return activeTasks.map(task => this.dbTaskToTask(task));
   }
@@ -63,12 +63,12 @@ export class StackWatchDatabase extends Dexie {
     // Get highest stack position
     const activeTasks = await this.tasks
       .where('ended_at')
-      .equals(0)
-      .toArray();
+      .equals(0);
 
-    const maxPosition = activeTasks.reduce((max, task) =>
-      Math.max(max, task.stack_position), -1
-    );
+    let maxPosition = -1;
+    await activeTasks.each((task) => {
+      maxPosition = Math.max(maxPosition, task.stack_position);
+    });
 
     const newTask: DBTask = {
       context,
@@ -119,12 +119,13 @@ export class StackWatchDatabase extends Dexie {
 
     // If no idle task exists, create one
     if (idleTasks.length === 0) {
+      const now = new Date();
       await this.tasks.add({
         context: 'Idle\nDefault idle state',
         stack_position: 0,
-        created_at: new Date(),
+        created_at: now,
         ended_at: 0,  // Active idle task
-        updated_at: new Date()
+        updated_at: now
       });
     }
   }
