@@ -1,0 +1,1 @@
+export { useDatabase } from '../contexts/DatabaseContext';
