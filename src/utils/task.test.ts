@@ -5,7 +5,7 @@ import {
   getDisplayTaskTitle,
   getTaskDescription,
   isTaskActive,
-  formatElapsedTime,
+  formatDuration,
   type Task
 } from './task';
 
@@ -141,61 +141,42 @@ describe('Task utility functions', () => {
     });
   });
 
-  describe('formatElapsedTime', () => {
-    it('should format time correctly for hours, minutes, and seconds', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(3661000000000n); // 1 hour, 1 minute, 1 second
-
-      const result = formatElapsedTime(start, end);
+  describe('formatDuration', () => {
+    it('should format duration correctly for hours, minutes, and seconds', () => {
+      const duration = Temporal.Duration.from({ hours: 1, minutes: 1, seconds: 1 });
+      const result = formatDuration(duration);
       expect(result).toBe('01:01:01');
     });
 
     it('should handle zero paddings correctly', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(BigInt((3600 + 60 + 5) * 1000000000)); // 1 hour, 1 minute, 5 seconds
-
-      const result = formatElapsedTime(start, end);
+      const duration = Temporal.Duration.from({ hours: 1, minutes: 1, seconds: 5 });
+      const result = formatDuration(duration);
       expect(result).toBe('01:01:05');
     });
 
     it('should handle large hour values', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(BigInt((25 * 3600 + 30 * 60 + 45) * 1000000000)); // 25 hours, 30 minutes, 45 seconds
-
-      const result = formatElapsedTime(start, end);
+      const duration = Temporal.Duration.from({ hours: 25, minutes: 30, seconds: 45 });
+      const result = formatDuration(duration);
       expect(result).toBe('25:30:45');
     });
 
     it('should handle durations less than an hour', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(BigInt((25 * 60 + 30) * 1000000000)); // 25 minutes, 30 seconds
-
-      const result = formatElapsedTime(start, end);
+      const duration = Temporal.Duration.from({ minutes: 25, seconds: 30 });
+      const result = formatDuration(duration);
       expect(result).toBe('00:25:30');
     });
 
     it('should handle durations less than a minute', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(45000000000n); // 45 seconds
-
-      const result = formatElapsedTime(start, end);
+      const duration = Temporal.Duration.from({ seconds: 45 });
+      const result = formatDuration(duration);
       expect(result).toBe('00:00:45');
     });
 
-    it('should use current time when endTime is not provided', () => {
-      const start = Temporal.Now.instant().subtract({ seconds: 10 });
-
-      const result = formatElapsedTime(start);
-      // Should be approximately 10 seconds, allowing for small timing differences
-      expect(result).toMatch(/00:00:(09|10|11)/);
-    });
-
     it('should handle fractional seconds by flooring', () => {
-      const start = Temporal.Instant.fromEpochNanoseconds(0n);
-      const end = Temporal.Instant.fromEpochNanoseconds(61700000000n); // 1 minute, 1.7 seconds
-
-      const result = formatElapsedTime(start, end);
+      const duration = Temporal.Duration.from({ minutes: 1, seconds: 1, milliseconds: 700 });
+      const result = formatDuration(duration);
       expect(result).toBe('00:01:01'); // Should floor to 1 second
     });
   });
+
 });

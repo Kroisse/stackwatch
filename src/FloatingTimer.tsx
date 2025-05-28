@@ -1,26 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Task, getTaskTitle, getDisplayTaskTitle } from './utils/task';
+import { Task, getTaskTitle, getDisplayTaskTitle, formatDuration } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
 import { Temporal } from '@js-temporal/polyfill';
 import './FloatingTimer.css';
-
-
-function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
-}
 
 export function FloatingTimer() {
   const db = useDatabase();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [startTime, setStartTime] = useState<Temporal.Instant | null>(null);
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [duration, setDuration] = useState<Temporal.Duration>(Temporal.Duration.from({ seconds: 0 }));
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -59,12 +47,12 @@ export function FloatingTimer() {
         setStartTime(task.created_at);
         // Calculate elapsed time
         const now = Temporal.Now.instant();
-        const duration = now.since(task.created_at);
-        setElapsedTime(Math.floor(duration.total('seconds')));
+        const elapsed = now.since(task.created_at);
+        setDuration(elapsed);
       } else {
         setCurrentTask(null);
         setStartTime(null);
-        setElapsedTime(0);
+        setDuration(Temporal.Duration.from({ seconds: 0 }));
       }
     } catch (error) {
       console.error('Failed to fetch current task:', error);
@@ -107,8 +95,8 @@ export function FloatingTimer() {
     if (currentTask && startTime) {
       intervalId = setInterval(() => {
         const now = Temporal.Now.instant();
-        const duration = now.since(startTime);
-        setElapsedTime(Math.floor(duration.total('seconds')));
+        const elapsed = now.since(startTime);
+        setDuration(elapsed);
       }, 1000);
     }
 
@@ -133,7 +121,7 @@ export function FloatingTimer() {
         <>
           <div className="task-context">{getDisplayTaskTitle(currentTask)}</div>
           <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
-            {formatTime(elapsedTime)}
+            {formatDuration(duration)}
           </div>
         </>
       ) : (
