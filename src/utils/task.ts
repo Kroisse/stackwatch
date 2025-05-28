@@ -14,6 +14,13 @@ export interface TaskStack {
   current_task?: Task;
 }
 
+// Efficient task stack with Map for O(1) lookups
+export interface EfficientTaskStack {
+  taskMap: Map<number, Task>;
+  taskOrder: number[]; // Array of task IDs in stack order
+  currentTaskId?: number;
+}
+
 export function getTaskTitle(task: Task): string {
   const firstLine = task.context.split('\n')[0];
   return firstLine.trim() || "Untitled Task";
