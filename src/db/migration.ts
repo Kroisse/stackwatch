@@ -39,8 +39,7 @@ export async function migrateFromSQLite(db: StackWatchDatabase, signal?: AbortSi
 
     // No data to migrate
     if (!response.tasks || response.tasks.length === 0) {
-      // Create initial idle task
-      await db.checkIdleTask();
+      // Nothing to migrate, just return
       return;
     }
 
@@ -81,7 +80,6 @@ export async function migrateFromSQLite(db: StackWatchDatabase, signal?: AbortSi
     }
     
     console.error('Migration failed:', error);
-    // Create idle task anyway for other errors
-    await db.checkIdleTask();
+    // Just log the error, no need to create idle task
   }
 }

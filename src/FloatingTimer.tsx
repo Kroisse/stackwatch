@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Task, getTaskTitle, getDisplayTaskTitle, formatElapsedTime } from './utils/task';
+import { Task, getDisplayTaskTitle, formatElapsedTime } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
 import { useCurrentTime } from './hooks/useCurrentTime';
 import './FloatingTimer.css';
@@ -84,7 +84,7 @@ export function FloatingTimer() {
     return '00:00:00';
   };
 
-  const isIdle = currentTask && getTaskTitle(currentTask).toLowerCase() === 'idle';
+  const isIdle = !currentTask;
 
   return (
     <div
@@ -102,7 +102,10 @@ export function FloatingTimer() {
           </div>
         </>
       ) : (
-        <div className="no-task">No active task</div>
+        <>
+          <div className="task-context">Idle</div>
+          <div className="elapsed-time idle">00:00:00</div>
+        </>
       )}
     </div>
   );

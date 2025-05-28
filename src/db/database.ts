@@ -148,24 +148,6 @@ export class StackWatchDatabase extends Dexie {
     return updatedTask;
   }
 
-  // Check for idle task
-  async checkIdleTask(): Promise<void> {
-    const idleTasks = await this.tasks
-      .filter(task => task.context.startsWith('Idle') && task.ended_at === 0)
-      .toArray();
-
-    // If no idle task exists, create one
-    if (idleTasks.length === 0) {
-      const now = new Date();
-      await this.tasks.add({
-        context: 'Idle\nDefault idle state',
-        stack_position: 0,
-        created_at: now,
-        ended_at: 0,  // Active idle task
-        updated_at: now
-      });
-    }
-  }
 
   // Helper to convert DBTask to Task interface
   private dbTaskToTask(dbTask: DBTask): Task {

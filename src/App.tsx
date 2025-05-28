@@ -92,7 +92,10 @@ function App() {
             <p className="task-timer">{taskStack.current_task ? calculateDuration(taskStack.current_task) : ''}</p>
           </div>
         ) : (
-          <p>No active task</p>
+          <div className="current-task idle">
+            <p className="idle-state">Idle</p>
+            <p className="task-timer">00:00:00</p>
+          </div>
         )}
       </div>
 
