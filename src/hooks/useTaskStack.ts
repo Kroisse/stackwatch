@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDatabase } from './useDatabase';
 import { TaskStack } from '../utils/task';
 
@@ -62,13 +62,23 @@ export function useTaskStack() {
     loadTasks();
   }, [loadTasks]);
 
+  // Shared BroadcastChannel for both listening and sending
+  const channelRef = useRef<BroadcastChannel | null>(null);
+
   // Listen for database changes (if multiple tabs/windows)
   useEffect(() => {
     const channel = new BroadcastChannel('stackwatch-db');
+    channelRef.current = channel;
     
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'db-changed') {
-        loadTasks();
+      // Handle various event types from database
+      switch (event.data.type) {
+        case 'task-created':
+        case 'task-popped':
+        case 'task-updated':
+        case 'stack-updated':
+          loadTasks();
+          break;
       }
     };
     
@@ -77,38 +87,18 @@ export function useTaskStack() {
     return () => {
       channel.removeEventListener('message', handleMessage);
       channel.close();
+      channelRef.current = null;
     };
   }, [loadTasks]);
 
-  // Broadcast changes
-  const broadcast = useCallback(() => {
-    const channel = new BroadcastChannel('stackwatch-db');
-    channel.postMessage({ type: 'db-changed' });
-    channel.close();
-  }, []);
-
-  // Wrap methods to broadcast changes
-  const pushTaskWithBroadcast = useCallback(async (context?: string) => {
-    await pushTask(context);
-    broadcast();
-  }, [pushTask, broadcast]);
-
-  const popTaskWithBroadcast = useCallback(async () => {
-    await popTask();
-    broadcast();
-  }, [popTask, broadcast]);
-
-  const updateTaskWithBroadcast = useCallback(async (id: number, context: string) => {
-    await updateTask(id, context);
-    broadcast();
-  }, [updateTask, broadcast]);
+  // No need for manual broadcast - database handles it now
 
   return {
     taskStack,
     loading,
-    pushTask: pushTaskWithBroadcast,
-    popTask: popTaskWithBroadcast,
-    updateTask: updateTaskWithBroadcast,
+    pushTask,
+    popTask,
+    updateTask,
     reload: loadTasks
   };
 }

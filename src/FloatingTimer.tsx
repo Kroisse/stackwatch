@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { Task, TaskStack, getTaskTitle } from './utils/task';
+import { Task, getTaskTitle } from './utils/task';
+import { useDatabase } from './hooks/useDatabase';
 import { Temporal } from '@js-temporal/polyfill';
 import './FloatingTimer.css';
 
-interface CurrentTaskInfo {
-  task: Task;
-  elapsed_seconds: number;
-}
 
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -22,6 +17,7 @@ function formatTime(seconds: number): string {
 }
 
 export function FloatingTimer() {
+  const db = useDatabase();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
   const [startTime, setStartTime] = useState<Temporal.Instant | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -46,69 +42,63 @@ export function FloatingTimer() {
   };
 
   // Handle click to focus main window (only if not dragging)
-  const handleMouseUp = async () => {
+  const handleMouseUp = () => {
     if (!isDragging) {
-      try {
-        await invoke('focus_main_window');
-      } catch (error) {
-        console.error('Failed to focus main window:', error);
-      }
+      // TODO: Implement focus main window for non-Tauri environment
+      console.log('Focus main window requested');
     }
     setIsDragging(false);
   };
 
+  // Load current task from database
+  const loadCurrentTask = async () => {
+    try {
+      const task = await db.getCurrentTask();
+      if (task) {
+        setCurrentTask(task);
+        setStartTime(task.created_at);
+        // Calculate elapsed time
+        const now = Temporal.Now.instant();
+        const duration = now.since(task.created_at);
+        setElapsedTime(Math.floor(duration.total('seconds')));
+      } else {
+        setCurrentTask(null);
+        setStartTime(null);
+        setElapsedTime(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current task:', error);
+    }
+  };
+
   // Load initial task info
   useEffect(() => {
-    const loadInitialTask = async () => {
-      try {
-        const info = await invoke<CurrentTaskInfo | null>('get_current_task_info');
-        if (info) {
-          setCurrentTask(info.task);
-          setStartTime(info.task.created_at);
-          setElapsedTime(info.elapsed_seconds);
-        } else {
-          setCurrentTask(null);
-          setStartTime(null);
-          setElapsedTime(0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch initial task info:', error);
+    loadCurrentTask();
+  }, [db]);
+
+  // Listen for database changes via BroadcastChannel
+  useEffect(() => {
+    const channel = new BroadcastChannel('stackwatch-db');
+    
+    const handleMessage = (event: MessageEvent) => {
+      // Handle various event types from database
+      switch (event.data.type) {
+        case 'task-created':
+        case 'task-popped':
+        case 'task-updated':
+        case 'stack-updated':
+          loadCurrentTask();
+          break;
       }
     };
-
-    loadInitialTask();
-  }, []);
-
-  // Listen for task events
-  useEffect(() => {
-    const unlistenPromises: Promise<() => void>[] = [];
-
-    // Listen for stack updates (handles all task changes)
-    unlistenPromises.push(
-      listen<TaskStack>('stack:updated', (event) => {
-        const stack = event.payload;
-        if (stack.current_task) {
-          setCurrentTask(stack.current_task);
-          setStartTime(stack.current_task.created_at);
-          // Calculate initial elapsed time using Temporal
-          const now = Temporal.Now.instant();
-          const duration = now.since(stack.current_task.created_at);
-          setElapsedTime(Math.floor(duration.total('seconds')));
-        } else {
-          setCurrentTask(null);
-          setStartTime(null);
-          setElapsedTime(0);
-        }
-      })
-    );
-
-    // Cleanup
+    
+    channel.addEventListener('message', handleMessage);
+    
     return () => {
-      unlistenPromises.forEach(promise => {
-        promise.then(unlisten => unlisten());
-      });
+      channel.removeEventListener('message', handleMessage);
+      channel.close();
     };
-  }, []);
+  }, [db]);
 
   // Update elapsed time every second
   useEffect(() => {

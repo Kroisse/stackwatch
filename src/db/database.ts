@@ -1,5 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { Task } from '../utils/task';
+import { Temporal } from '@js-temporal/polyfill';
+import { BroadcastMessage } from '../types/broadcast';
 
 export interface DBTask {
   id?: number;
@@ -12,6 +14,7 @@ export interface DBTask {
 
 export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
+  private channel: BroadcastChannel;
 
   constructor() {
     super('StackWatchDB');
@@ -22,6 +25,14 @@ export class StackWatchDatabase extends Dexie {
     this.version(1).stores({
       tasks: '++id, stack_position, ended_at, created_at'
     });
+
+    // Initialize BroadcastChannel for cross-tab communication
+    this.channel = new BroadcastChannel('stackwatch-db');
+  }
+
+  // Helper method to broadcast messages
+  private broadcast(message: BroadcastMessage): void {
+    this.channel.postMessage(message);
   }
 
   // Get current active task (highest stack_position with no ended_at)
@@ -79,7 +90,22 @@ export class StackWatchDatabase extends Dexie {
     };
 
     const id = await this.tasks.add(newTask);
-    return this.dbTaskToTask({ ...newTask, id });
+    const task = this.dbTaskToTask({ ...newTask, id });
+
+    // Broadcast task creation event
+    this.broadcast({
+      type: 'task-created',
+      task: task,
+      timestamp: Temporal.Now.instant()
+    });
+
+    // Broadcast stack update event
+    this.broadcast({
+      type: 'stack-updated',
+      timestamp: Temporal.Now.instant()
+    });
+
+    return task;
   }
 
   // Pop the current task from the stack
@@ -93,7 +119,22 @@ export class StackWatchDatabase extends Dexie {
       updated_at: now
     });
 
-    return { ...currentTask, ended_at: now.toTemporalInstant(), updated_at: now.toTemporalInstant() };
+    const poppedTask = { ...currentTask, ended_at: now.toTemporalInstant(), updated_at: now.toTemporalInstant() };
+
+    // Broadcast task popped event
+    this.broadcast({
+      type: 'task-popped',
+      task: poppedTask,
+      timestamp: Temporal.Now.instant()
+    });
+
+    // Broadcast stack update event
+    this.broadcast({
+      type: 'stack-updated',
+      timestamp: Temporal.Now.instant()
+    });
+
+    return poppedTask;
   }
 
   // Update task context
@@ -108,7 +149,22 @@ export class StackWatchDatabase extends Dexie {
     const task = await this.tasks.get(id);
     if (!task) throw new Error('Task not found');
 
-    return this.dbTaskToTask(task);
+    const updatedTask = this.dbTaskToTask(task);
+
+    // Broadcast task updated event
+    this.broadcast({
+      type: 'task-updated',
+      task: updatedTask,
+      timestamp: Temporal.Now.instant()
+    });
+
+    // Broadcast stack update event
+    this.broadcast({
+      type: 'stack-updated',
+      timestamp: Temporal.Now.instant()
+    });
+
+    return updatedTask;
   }
 
   // Check for idle task
@@ -142,6 +198,11 @@ export class StackWatchDatabase extends Dexie {
       ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at.toTemporalInstant(),
       updated_at: dbTask.updated_at.toTemporalInstant()
     };
+  }
+
+  // Cleanup method to close the BroadcastChannel
+  close(): void {
+    this.channel.close();
   }
 }
 
