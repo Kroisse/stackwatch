@@ -3,12 +3,15 @@ import { getDisplayTaskTitle, getTaskDescription, formatElapsedTime, isTaskActiv
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
+import { useCurrentTime } from "./hooks/useCurrentTime";
 import "./App.css";
 
 function App() {
   const db = useDatabase();
   const { taskStack, pushTask, popTask, updateTask } = useTaskStack();
   const [editingContext, setEditingContext] = useState("");
+  const currentTime = useCurrentTime();
+
   // Run migration on first load
   useEffect(() => {
     migrateFromSQLite(db).catch(console.error);
@@ -57,7 +60,7 @@ function App() {
 
 
   function calculateDuration(task: Task): string {
-    return formatElapsedTime(task.created_at, task.ended_at);
+    return formatElapsedTime(task.created_at, task.ended_at || currentTime);
   }
 
   return (

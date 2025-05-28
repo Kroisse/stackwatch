@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Task, getTaskTitle, getDisplayTaskTitle, formatElapsedTime } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
+import { useCurrentTime } from './hooks/useCurrentTime';
 import './FloatingTimer.css';
 
 export function FloatingTimer() {
   const db = useDatabase();
+  const currentTime = useCurrentTime();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [elapsedTime, setElapsedTime] = useState<string>('00:00:00');
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -41,16 +41,7 @@ export function FloatingTimer() {
   const loadCurrentTask = async () => {
     try {
       const task = await db.getCurrentTask();
-      if (task) {
-        setCurrentTask(task);
-        setStartTime(task.created_at);
-        // Calculate elapsed time
-        setElapsedTime(formatElapsedTime(task.created_at));
-      } else {
-        setCurrentTask(null);
-        setStartTime(null);
-        setElapsedTime('00:00:00');
-      }
+      setCurrentTask(task || null);
     } catch (error) {
       console.error('Failed to fetch current task:', error);
     }
@@ -85,22 +76,13 @@ export function FloatingTimer() {
     };
   }, [db]);
 
-  // Update elapsed time every second
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout | undefined;
-
-    if (currentTask && startTime) {
-      intervalId = setInterval(() => {
-        setElapsedTime(formatElapsedTime(startTime));
-      }, 1000);
+  // Calculate elapsed time using current time
+  const getElapsedTime = (): string => {
+    if (currentTask) {
+      return formatElapsedTime(currentTask.created_at, currentTime);
     }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [currentTask, startTime]);
+    return '00:00:00';
+  };
 
   const isIdle = currentTask && getTaskTitle(currentTask).toLowerCase() === 'idle';
 
@@ -116,7 +98,7 @@ export function FloatingTimer() {
         <>
           <div className="task-context">{getDisplayTaskTitle(currentTask)}</div>
           <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
-            {elapsedTime}
+            {getElapsedTime()}
           </div>
         </>
       ) : (
