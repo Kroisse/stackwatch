@@ -11,6 +11,20 @@ export interface DBTask {
   updated_at: Date;
 }
 
+// Helper to convert DBTask to Task interface
+export function dbTaskToTask(dbTask: DBTask): Task {
+  if (!dbTask.id) throw new Error('Task must have an id');
+
+  return {
+    id: dbTask.id,
+    context: dbTask.context,
+    stack_position: dbTask.stack_position,
+    created_at: dbTask.created_at,
+    ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at,
+    updated_at: dbTask.updated_at
+  };
+}
+
 export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
   private channel: BroadcastChannel;
@@ -49,7 +63,7 @@ export class StackWatchDatabase extends Dexie {
       }
     });
 
-    return highestTask && this.dbTaskToTask(highestTask);
+    return highestTask && dbTaskToTask(highestTask);
   }
 
   // Get all active tasks in stack order
@@ -63,7 +77,7 @@ export class StackWatchDatabase extends Dexie {
     // Sort by stack_position descending
     activeTasks.reverse();
 
-    return activeTasks.map(task => this.dbTaskToTask(task));
+    return activeTasks.map(task => dbTaskToTask(task));
   }
 
   // Push a new task to the stack
@@ -89,7 +103,7 @@ export class StackWatchDatabase extends Dexie {
     };
 
     const id = await this.tasks.add(newTask);
-    const task = this.dbTaskToTask({ ...newTask, id });
+    const task = dbTaskToTask({ ...newTask, id });
 
     // Broadcast task creation event
     this.broadcast({
@@ -136,7 +150,7 @@ export class StackWatchDatabase extends Dexie {
     const task = await this.tasks.get(id);
     if (!task) throw new Error('Task not found');
 
-    const updatedTask = this.dbTaskToTask(task);
+    const updatedTask = dbTaskToTask(task);
 
     // Broadcast task updated event
     this.broadcast({
@@ -148,20 +162,6 @@ export class StackWatchDatabase extends Dexie {
     return updatedTask;
   }
 
-
-  // Helper to convert DBTask to Task interface
-  private dbTaskToTask(dbTask: DBTask): Task {
-    if (!dbTask.id) throw new Error('Task must have an id');
-
-    return {
-      id: dbTask.id,
-      context: dbTask.context,
-      stack_position: dbTask.stack_position,
-      created_at: dbTask.created_at,
-      ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at,
-      updated_at: dbTask.updated_at
-    };
-  }
 
   // Cleanup method to close the BroadcastChannel
   close(): void {
