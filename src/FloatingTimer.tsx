@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Task, getDisplayTaskTitle, formatElapsedTime } from './utils/task';
+import { Task, getDisplayTaskTitle } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
-import { useCurrentTime } from './hooks/useCurrentTime';
+import { TaskTimer } from './components/TaskTimer';
 import './FloatingTimer.css';
 
 export function FloatingTimer() {
   const db = useDatabase();
-  const currentTime = useCurrentTime();
   const [currentTask, setCurrentTask] = useState<Task | null>(null);
-  const [idleStartTime, setIdleStartTime] = useState<Date | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -48,17 +46,6 @@ export function FloatingTimer() {
     }
   };
 
-  // Update idle start time when current task changes
-  useEffect(() => {
-    if (!currentTask) {
-      // Just became idle - reset to current time
-      setIdleStartTime(new Date());
-    } else {
-      // Not idle anymore
-      setIdleStartTime(null);
-    }
-  }, [currentTask]);
-
   // Load initial task info
   useEffect(() => {
     loadCurrentTask();
@@ -88,16 +75,6 @@ export function FloatingTimer() {
     };
   }, [db]);
 
-  // Calculate elapsed time using current time
-  const getElapsedTime = (): string => {
-    if (currentTask) {
-      return formatElapsedTime(currentTask.created_at, currentTime);
-    }
-    return '00:00:00';
-  };
-
-  const isIdle = !currentTask;
-
   return (
     <div
       className="floating-timer"
@@ -106,21 +83,12 @@ export function FloatingTimer() {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      {currentTask ? (
-        <>
-          <div className="task-context">{getDisplayTaskTitle(currentTask)}</div>
-          <div className={`elapsed-time ${isIdle ? 'idle' : ''}`}>
-            {getElapsedTime()}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="task-context">Idle</div>
-          <div className="elapsed-time idle">
-            {idleStartTime ? formatElapsedTime(idleStartTime, currentTime) : '00:00:00'}
-          </div>
-        </>
-      )}
+      <div className="task-context">
+        {currentTask ? getDisplayTaskTitle(currentTask) : 'Idle'}
+      </div>
+      <div className="elapsed-time">
+        <TaskTimer task={currentTask} />
+      </div>
     </div>
   );
 }

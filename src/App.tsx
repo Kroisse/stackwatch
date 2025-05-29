@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
-import { getDisplayTaskTitle, getTaskDescription, formatElapsedTime, isTaskActive, Task } from "./utils/task";
+import { getDisplayTaskTitle, getTaskDescription, isTaskActive } from "./utils/task";
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
-import { useCurrentTime } from "./hooks/useCurrentTime";
 import { invoke } from "@tauri-apps/api/core";
+import { TaskTimer } from "./components/TaskTimer";
 import "./App.css";
 
 function App() {
   const db = useDatabase();
   const { taskStack, pushTask, popTask, updateTask } = useTaskStack();
   const [editingContext, setEditingContext] = useState("");
-  const currentTime = useCurrentTime();
   const [floatingWindow, setFloatingWindow] = useState<Window | null>(null);
 
   // Run migration on first load
@@ -47,19 +46,6 @@ function App() {
     }
   };
 
-  // Track idle start time
-  const [idleStartTime, setIdleStartTime] = useState<Date | null>(null);
-
-  // Update idle start time when task stack changes
-  useEffect(() => {
-    if (!taskStack.current_task && taskStack.tasks.length === 0) {
-      // Just became idle - always reset to current time
-      setIdleStartTime(new Date());
-    } else {
-      // Not idle anymore
-      setIdleStartTime(null);
-    }
-  }, [taskStack.current_task, taskStack.tasks.length]);
 
   const handlePopTask = async () => {
     try {
@@ -111,11 +97,6 @@ function App() {
     }
   };
 
-
-  function calculateDuration(task: Task): string {
-    return formatElapsedTime(task.created_at, task.ended_at || currentTime);
-  }
-
   return (
     <main className="container">
       {/* Current Task Display */}
@@ -132,12 +113,12 @@ function App() {
                 rows={5}
               />
             </div>
-            <p className="task-timer">{taskStack.current_task ? calculateDuration(taskStack.current_task) : ''}</p>
+            <p className="task-timer"><TaskTimer task={taskStack.current_task} /></p>
           </div>
         ) : (
           <div className="current-task idle">
             <p className="idle-state">Idle</p>
-            <p className="task-timer">{idleStartTime ? formatElapsedTime(idleStartTime, currentTime) : '00:00:00'}</p>
+            <p className="task-timer"><TaskTimer task={null} /></p>
           </div>
         )}
       </div>
@@ -170,7 +151,7 @@ function App() {
                   {getTaskDescription(task) && <p className="task-context">{getTaskDescription(task)}</p>}
                 </div>
                 <div className="task-duration">
-                  {calculateDuration(task)}
+                  <TaskTimer task={task} />
                 </div>
               </div>
             ))

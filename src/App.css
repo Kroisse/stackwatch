@@ -188,6 +188,11 @@ button:disabled {
   color: #666;
 }
 
+.task-duration .task-timer {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;
