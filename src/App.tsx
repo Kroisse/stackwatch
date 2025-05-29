@@ -68,9 +68,9 @@ function App() {
       />
       
       <TaskControls
-        onPushTask={handlePushTask}
-        onPopTask={handlePopTask}
-        onToggleTimer={toggleFloatingWindow}
+        onPushTask={() => void handlePushTask()}
+        onPopTask={() => void handlePopTask()}
+        onToggleTimer={() => void toggleFloatingWindow()}
         canPopTask={!!taskStack.current_task}
       />
       

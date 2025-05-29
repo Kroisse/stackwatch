@@ -10,7 +10,7 @@ describe('StackWatchDatabase', () => {
 
   beforeEach(() => {
     // Mock BroadcastChannel
-    mockPostMessage = vi.fn((message) => {
+    mockPostMessage = vi.fn((message: BroadcastMessage) => {
       broadcastMessages.push(message);
     });
 
@@ -31,7 +31,7 @@ describe('StackWatchDatabase', () => {
     // Clear all data instead of deleting database
     try {
       await db.tasks.clear();
-    } catch (e) {
+    } catch (_e) {
       // Ignore errors in test environment
     }
     vi.clearAllMocks();

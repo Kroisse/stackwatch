@@ -25,7 +25,7 @@ export function getTaskTitle(task: Task): string {
   if (!trimmedContext) return "";
 
   // Use regex to extract first line more efficiently
-  const firstLineMatch = trimmedContext.match(/^[^\n]*/);
+  const firstLineMatch = /^[^\n]*/.exec(trimmedContext);
   return firstLineMatch ? firstLineMatch[0].trim() : "";
 }
 
@@ -41,7 +41,7 @@ export function getTaskDescription(task: Task): string {
   if (!trimmedContext) return "";
 
   // Use regex to extract everything after the first line more efficiently
-  const descriptionMatch = trimmedContext.match(/^[^\n]*\n(.*)$/s);
+  const descriptionMatch = /^[^\n]*\n(.*)$/s.exec(trimmedContext);
   if (!descriptionMatch) return ""; // No newline found, single line
 
   // Remove leading newline if present (preserve existing behavior)
@@ -59,7 +59,7 @@ export function isTaskActive(task: Task): boolean {
  * @returns Formatted string as HH:MM:SS
  */
 export function formatElapsedTime(startDate: Date, endDate?: Date): string {
-  const end = endDate || new Date();
+  const end = endDate ?? new Date();
   const diffMs = end.getTime() - startDate.getTime();
   
   const totalSeconds = Math.floor(diffMs / 1000);

@@ -38,7 +38,7 @@ export function CurrentTask({ currentTask, onUpdateTask }: CurrentTaskProps) {
             <textarea
               value={editingContext}
               onChange={(e) => setEditingContext(e.target.value)}
-              onBlur={handleUpdateTaskContext}
+              onBlur={() => void handleUpdateTaskContext()}
               placeholder="Task name (first line)&#10;Additional context..."
               rows={5}
             />

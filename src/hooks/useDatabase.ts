@@ -1,1 +1,1 @@
-export { useDatabase } from '../contexts/DatabaseContext';
+export { useDatabase } from './useDatabaseContext';

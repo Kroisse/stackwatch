@@ -29,7 +29,7 @@ export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
   private channel: BroadcastChannel;
 
-  constructor(name: string = 'StackWatchDB') {
+  constructor(name = 'StackWatchDB') {
     super(name);
 
     // Define database schema
@@ -81,7 +81,7 @@ export class StackWatchDatabase extends Dexie {
   }
 
   // Push a new task to the stack
-  async pushTask(context: string = "New Task"): Promise<Task> {
+  async pushTask(context = "New Task"): Promise<Task> {
     const now = new Date();
 
     // Get highest stack position
@@ -102,7 +102,7 @@ export class StackWatchDatabase extends Dexie {
       updated_at: now
     };
 
-    const id = await this.tasks.add(newTask);
+    const id = await this.tasks.add(newTask) as number;
     const task = dbTaskToTask({ ...newTask, id });
 
     // Broadcast task creation event

@@ -134,7 +134,7 @@ export function useTaskStack() {
 
   // Initial load
   useEffect(() => {
-    loadTasks();
+    void loadTasks();
   }, [loadTasks]);
 
   // Shared BroadcastChannel for both listening and sending

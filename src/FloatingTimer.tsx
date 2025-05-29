@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Task, getDisplayTaskTitle } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
 import { TaskTimer } from './components/TaskTimer';
@@ -35,9 +35,9 @@ export function FloatingTimer() {
           // In Tauri environment, use the focus_main_window command
           const { invoke } = await import('@tauri-apps/api/core');
           await invoke('focus_main_window');
-        } else if (window.opener && !window.opener.closed) {
+        } else if (window.opener && !(window.opener as Window).closed) {
           // In web environment, try to focus the opener window
-          window.opener.focus();
+          (window.opener as Window).focus();
         }
       } catch (error) {
         console.error('Failed to focus main window:', error);
@@ -47,31 +47,31 @@ export function FloatingTimer() {
   };
 
   // Load current task from database
-  const loadCurrentTask = async () => {
+  const loadCurrentTask = useCallback(async () => {
     try {
       const task = await db.getCurrentTask();
-      setCurrentTask(task || undefined);
+      setCurrentTask(task ?? undefined);
     } catch (error) {
       console.error('Failed to fetch current task:', error);
     }
-  };
+  }, [db]);
 
   // Load initial task info
   useEffect(() => {
-    loadCurrentTask();
-  }, [db]);
+    void loadCurrentTask();
+  }, [loadCurrentTask]);
 
   // Listen for database changes via BroadcastChannel
   useEffect(() => {
     const channel = new BroadcastChannel('stackwatch-db');
     
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent<{type: string}>) => {
       // Handle various event types from database
       switch (event.data.type) {
         case 'task-created':
         case 'task-popped':
         case 'task-updated':
-          loadCurrentTask();
+          void loadCurrentTask();
           break;
       }
     };
@@ -82,7 +82,7 @@ export function FloatingTimer() {
       channel.removeEventListener('message', handleMessage);
       channel.close();
     };
-  }, [db]);
+  }, [loadCurrentTask]);
 
   return (
     <div
@@ -90,7 +90,7 @@ export function FloatingTimer() {
       data-tauri-drag-region
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      onMouseUp={() => void handleMouseUp()}
     >
       <div className="task-context">
         {currentTask ? getDisplayTaskTitle(currentTask) : 'Idle'}
