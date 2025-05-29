@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, use, useRef, useEffect } from 'react';
 import { StackWatchDatabase } from '../db/database';
 
 interface DatabaseContextValue {
@@ -8,17 +8,28 @@ interface DatabaseContextValue {
 const DatabaseContext = createContext<DatabaseContextValue | null>(null);
 
 export function DatabaseProvider({ children }: { children: React.ReactNode }) {
-  const db = useMemo(() => new StackWatchDatabase(), []);
+  const dbRef = useRef<StackWatchDatabase | null>(null);
+  
+  if (!dbRef.current) {
+    dbRef.current = new StackWatchDatabase();
+  }
+
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      dbRef.current?.close();
+    };
+  }, []);
 
   return (
-    <DatabaseContext.Provider value={{ db }}>
+    <DatabaseContext value={{ db: dbRef.current }}>
       {children}
-    </DatabaseContext.Provider>
+    </DatabaseContext>
   );
 }
 
 export function useDatabase() {
-  const context = useContext(DatabaseContext);
+  const context = use(DatabaseContext);
   if (!context) {
     throw new Error('useDatabase must be used within a DatabaseProvider');
   }
