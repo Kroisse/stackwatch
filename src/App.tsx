@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useTaskStack } from "./hooks/useTaskStack";
 import { migrateFromSQLite } from "./db/migration";
 import { useDatabase } from "./hooks/useDatabase";
-import { invoke } from "@tauri-apps/api/core";
 import { CurrentTask } from "./components/CurrentTask";
 import { TaskStack } from "./components/TaskStack";
 import { TaskControls } from "./components/TaskControls";
@@ -50,6 +49,7 @@ function App() {
     try {
       // Check if we're in Tauri environment
       if ('__TAURI__' in window) {
+        const { invoke } = await import('@tauri-apps/api/core');
         await invoke("toggle_floating_window");
       } else {
         // In web environment, use window.open

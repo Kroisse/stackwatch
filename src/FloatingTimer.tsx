@@ -28,10 +28,20 @@ export function FloatingTimer() {
   };
 
   // Handle click to focus main window (only if not dragging)
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
     if (!isDragging) {
-      // TODO: Implement focus main window for non-Tauri environment
-      console.log('Focus main window requested');
+      try {
+        if ('__TAURI__' in window) {
+          // In Tauri environment, use the focus_main_window command
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('focus_main_window');
+        } else if (window.opener && !window.opener.closed) {
+          // In web environment, try to focus the opener window
+          window.opener.focus();
+        }
+      } catch (error) {
+        console.error('Failed to focus main window:', error);
+      }
     }
     setIsDragging(false);
   };
