@@ -9,7 +9,7 @@ StackWatch is a stack-based task management application transitioning from a Pyt
 ### Tech Stack
 - **Frontend**: React 18 + TypeScript + Vite
 - **Backend**: Rust with Tauri v2
-- **Database**: SQLite via sqlx
+- **Database**: Dexie (IndexedDB) for frontend-only storage
 - **Legacy**: Python/Flask web app in `/stackwatch/` directory
 
 ### Key Concepts
@@ -57,27 +57,28 @@ cd src-tauri && cargo fmt
 ```
 
 ### Database
-SQLite migrations are in `/src-tauri/migrations/`. The database is managed through sqlx.
+The application uses Dexie (IndexedDB) for local data storage in `/src/db/database.ts`. All data is stored client-side in the browser's IndexedDB.
 
 ## Project Structure
 
 - `/src/` - React TypeScript frontend
+  - `/src/components/` - React components
+  - `/src/hooks/` - Custom React hooks
+  - `/src/db/` - Dexie database schema and operations
 - `/src-tauri/` - Rust Tauri backend
   - `/src-tauri/src/lib.rs` - Main library entry point
   - `/src-tauri/src/commands.rs` - Tauri command handlers
-  - `/src-tauri/src/database.rs` - Database connection and queries
-  - `/src-tauri/src/models.rs` - Data models
-  - `/src-tauri/migrations/` - SQL migration files
+  - `/src-tauri/src/error.rs` - Error handling types
 - `/stackwatch/` - Legacy Python/Flask implementation (reference only)
 
 ## Development Notes
 
 1. TypeScript is in strict mode with unused variable/parameter checks
 2. Tests are set up with Vitest and can be run with `npm run test`
-3. The project is mid-migration from Flask to Tauri
-4. Database operations use async Rust with tokio runtime
-5. Frontend communicates with backend via Tauri commands
-6. Files in `src-tauri/migrations` can only be modified for the most recent script.
+3. The project has completed migration from Flask to Tauri for desktop functionality
+4. All data persistence is handled in the frontend using Dexie (IndexedDB)
+5. Backend only handles window management operations (toggle floating window, focus main window)
+6. All Tauri imports use dynamic imports for web compatibility
 
 ## TypeScript Guidelines
 - Use `undefined` instead of `null` when possible in TypeScript code. But, `== null` is preferred for checking both `null` and `undefined`.

@@ -29,19 +29,6 @@ impl Error {
     }
 
     // Helper methods for accessing specific error types
-    pub fn as_database_error(&self) -> Option<&sqlx::Error> {
-        match &self.kind {
-            ErrorKind::Database(e) => Some(e),
-            _ => None,
-        }
-    }
-
-    pub fn as_migration_error(&self) -> Option<&sqlx::migrate::MigrateError> {
-        match &self.kind {
-            ErrorKind::Migration(e) => Some(e),
-            _ => None,
-        }
-    }
 
     pub fn as_tauri_error(&self) -> Option<&tauri::Error> {
         match &self.kind {
@@ -54,12 +41,6 @@ impl Error {
 #[derive(Debug, Display, From)]
 #[non_exhaustive]
 enum ErrorKind {
-    #[display("Database error: {_0}")]
-    Database(sqlx::Error),
-
-    #[display("Migration error: {_0}")]
-    Migration(sqlx::migrate::MigrateError),
-
     #[display("Tauri error: {_0}")]
     Tauri(tauri::Error),
 
@@ -70,8 +51,6 @@ enum ErrorKind {
 impl std::error::Error for ErrorKind {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            ErrorKind::Database(e) => Some(e),
-            ErrorKind::Migration(e) => Some(e),
             ErrorKind::Tauri(e) => Some(e),
             ErrorKind::Other(e) => Some(e.as_ref()),
         }
@@ -92,8 +71,6 @@ macro_rules! impl_from_error {
 }
 
 impl_from_error!(
-    sqlx::Error,
-    sqlx::migrate::MigrateError,
     tauri::Error,
     Box<dyn std::error::Error + Send + Sync>,
 );

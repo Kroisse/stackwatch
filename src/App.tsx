@@ -1,31 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTaskStack } from "./hooks/useTaskStack";
-import { migrateFromSQLite } from "./db/migration";
-import { useDatabase } from "./hooks/useDatabase";
 import { CurrentTask } from "./components/CurrentTask";
 import { TaskStack } from "./components/TaskStack";
 import { TaskControls } from "./components/TaskControls";
 import "./App.css";
 
 function App() {
-  const db = useDatabase();
   const { taskStack, pushTask, popTask, updateTask } = useTaskStack();
   const [floatingWindow, setFloatingWindow] = useState<Window | null>(null);
-
-  // Run migration on first load
-  useEffect(() => {
-    const abortController = new AbortController();
-    
-    migrateFromSQLite(db, abortController.signal).catch(error => {
-      if (error.name !== 'AbortError') {
-        console.error('Migration failed:', error);
-      }
-    });
-
-    return () => {
-      abortController.abort();
-    };
-  }, [db]);
 
   const handlePushTask = async () => {
     try {
