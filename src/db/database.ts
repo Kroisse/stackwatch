@@ -29,8 +29,8 @@ export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
   private channel: BroadcastChannel;
 
-  constructor() {
-    super('StackWatchDB');
+  constructor(name: string = 'StackWatchDB') {
+    super(name);
 
     // Define database schema
     // Note: 'is_active' would be better than 'ended_at' for indexing
