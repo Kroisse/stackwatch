@@ -1,6 +1,7 @@
-import Dexie, { Table, TransactionMode } from 'dexie';
+import Dexie, { Table } from 'dexie';
 import { Task } from '../utils/task';
 import { BroadcastMessage } from '../types/broadcast';
+import { abortable } from './decorators';
 
 export interface DBTask {
   id?: number;
@@ -25,6 +26,7 @@ export function dbTaskToTask(dbTask: DBTask): Task {
   };
 }
 
+
 export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
   private channel: BroadcastChannel;
@@ -48,45 +50,9 @@ export class StackWatchDatabase extends Dexie {
     this.channel.postMessage(message);
   }
 
-  // Helper to create cancellable transaction
-  private async cancellableTransaction<T>(
-    mode: TransactionMode,
-    operation: () => Promise<T>,
-    signal?: AbortSignal
-  ): Promise<T> {
-    signal?.throwIfAborted();
-
-    // Store reference to the current transaction
-    const transactions = new Set<{ abort: () => void }>();
-
-    const abortHandler = () => {
-      transactions.forEach(t => t.abort());
-    };
-
-    signal?.addEventListener('abort', abortHandler);
-
-    try {
-      return await this.transaction(mode, this.tasks, async (trans) => {
-        signal?.throwIfAborted();
-        transactions.add(trans);
-        return await operation();
-      });
-    } finally {
-      signal?.removeEventListener('abort', abortHandler);
-      transactions.clear();
-    }
-  }
-
   // Get current active task (highest stack_position with no ended_at)
-  async getCurrentTask(signal?: AbortSignal): Promise<Task | undefined> {
-    return this.cancellableTransaction(
-      'r',
-      () => this.getCurrentTaskInternal(),
-      signal
-    );
-  }
-
-  private async getCurrentTaskInternal(): Promise<Task | undefined> {
+  @abortable
+  async getCurrentTask(_signal?: AbortSignal): Promise<Task | undefined> {
     // Use index to get active tasks efficiently
     const activeTasks = this.tasks
       .where('ended_at')
@@ -104,15 +70,8 @@ export class StackWatchDatabase extends Dexie {
   }
 
   // Get all active tasks in stack order
-  async getTaskStack(signal?: AbortSignal): Promise<Task[]> {
-    return this.cancellableTransaction(
-      'r',
-      () => this.getTaskStackInternal(),
-      signal
-    );
-  }
-
-  private async getTaskStackInternal(): Promise<Task[]> {
+  @abortable
+  async getTaskStack(_signal?: AbortSignal): Promise<Task[]> {
     // Use index to get active tasks efficiently
     const activeTasks = await this.tasks
       .where('ended_at')
