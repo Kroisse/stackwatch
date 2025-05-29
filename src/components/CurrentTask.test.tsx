@@ -5,7 +5,7 @@ import { Task } from '../utils/task';
 
 // Mock the TaskTimer component
 vi.mock('./TaskTimer', () => ({
-  TaskTimer: ({ task }: { task?: Task }) => 
+  TaskTimer: ({ task }: { task?: Task }) =>
     <span>Timer: {task ? `Task ${task.id}` : 'Idle'}</span>
 }));
 
@@ -13,9 +13,9 @@ describe('CurrentTask', () => {
   it('renders idle state when no current task', () => {
     const onUpdateTask = vi.fn();
     const { getByText } = render(
-      <CurrentTask currentTask={undefined} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={undefined} onUpdateTask={onUpdateTask} />
     );
-    
+
     expect(getByText('Current Task')).toBeInTheDocument();
     expect(getByText('Idle')).toBeInTheDocument();
     expect(getByText('Timer: Idle')).toBeInTheDocument();
@@ -32,9 +32,9 @@ describe('CurrentTask', () => {
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText, getByText } = render(
-      <CurrentTask currentTask={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
     );
-    
+
     const textarea = getByPlaceholderText(/Task name/);
     expect(textarea).toHaveValue('Test task\nWith description');
     expect(getByText('Timer: Task 1')).toBeInTheDocument();
@@ -51,12 +51,12 @@ describe('CurrentTask', () => {
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText } = render(
-      <CurrentTask currentTask={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
     );
-    
+
     const textarea = getByPlaceholderText(/Task name/);
     fireEvent.change(textarea, { target: { value: 'Updated text' } });
-    
+
     expect(textarea).toHaveValue('Updated text');
   });
 
@@ -71,13 +71,13 @@ describe('CurrentTask', () => {
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText } = render(
-      <CurrentTask currentTask={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
     );
-    
+
     const textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Updated text' } });
     fireEvent.blur(textarea);
-    
+
     await waitFor(() => {
       expect(onUpdateTask).toHaveBeenCalledWith(1, 'Updated text');
     });
@@ -101,14 +101,14 @@ describe('CurrentTask', () => {
     const onUpdateTask = vi.fn();
 
     const { rerender, getByPlaceholderText } = render(
-      <CurrentTask currentTask={task1} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task1} onUpdateTask={onUpdateTask} />
     );
-    
+
     let textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
     expect(textarea.value).toBe('Task 1');
 
-    rerender(<CurrentTask currentTask={task2} onUpdateTask={onUpdateTask} />);
-    
+    rerender(<CurrentTask task={task2} onUpdateTask={onUpdateTask} />);
+
     textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
     expect(textarea.value).toBe('Task 2');
   });
@@ -124,14 +124,14 @@ describe('CurrentTask', () => {
     const onUpdateTask = vi.fn();
 
     const { rerender, getByPlaceholderText, queryByPlaceholderText } = render(
-      <CurrentTask currentTask={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
     );
-    
+
     const textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Modified text' } });
 
-    rerender(<CurrentTask currentTask={undefined} onUpdateTask={onUpdateTask} />);
-    
+    rerender(<CurrentTask task={undefined} onUpdateTask={onUpdateTask} />);
+
     // Should not have textarea in idle state
     expect(queryByPlaceholderText(/Task name/)).toBeFalsy();
   });

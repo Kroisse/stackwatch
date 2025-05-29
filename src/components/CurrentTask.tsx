@@ -3,11 +3,11 @@ import { Task } from '../utils/task';
 import { TaskTimer } from './TaskTimer';
 
 interface CurrentTaskProps {
-  currentTask: Task | undefined;
+  task: Task | undefined;
   onUpdateTask: (taskId: number, context: string) => Promise<void>;
 }
 
-export function CurrentTask({ currentTask, onUpdateTask }: CurrentTaskProps) {
+export function CurrentTask({ task: currentTask, onUpdateTask }: CurrentTaskProps) {
   const [editingContext, setEditingContext] = useState('');
 
   // Update editing context when current task changes

@@ -45,13 +45,13 @@ function App() {
           const height = 60;
           const left = window.screen.width - width - 20;
           const top = 20;
-          
+
           const newWindow = window.open(
             '/floating.html',
             'stackwatch-floating',
             `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,resizable=no`
           );
-          
+
           setFloatingWindow(newWindow);
         }
       }
@@ -62,18 +62,18 @@ function App() {
 
   return (
     <main className="container">
-      <CurrentTask 
-        currentTask={taskStack.current_task}
+      <CurrentTask
+        task={taskStack.current_task}
         onUpdateTask={updateTask}
       />
-      
+
       <TaskControls
         onPushTask={() => void handlePushTask()}
         onPopTask={() => void handlePopTask()}
         onToggleTimer={() => void toggleFloatingWindow()}
         canPopTask={!!taskStack.current_task}
       />
-      
+
       <TaskStack tasks={taskStack.tasks} />
     </main>
   );
