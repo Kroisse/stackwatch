@@ -12,7 +12,6 @@ export default tseslint.config(
       'build/**',
       'node_modules/**',
       'src-tauri/**',
-      'stackwatch/**', // Legacy Python code
       '**/*.min.js',
       '**/*.d.ts',
     ],
