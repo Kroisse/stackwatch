@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 StackWatch is a stack-based task management application transitioning from a Python/Flask web app to a Tauri desktop application. The core concept is LIFO (Last In, First Out) task management with automatic timer tracking and context notes.
 
 ### Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
+- **Frontend**: React 19 + TypeScript + Vite
 - **Backend**: Rust with Tauri v2
 - **Database**: Dexie (IndexedDB) for frontend-only storage
 - **Legacy**: Python/Flask web app in `/stackwatch/` directory
