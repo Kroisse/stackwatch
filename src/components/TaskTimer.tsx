@@ -3,7 +3,7 @@ import { Task, formatElapsedTime } from '../utils/task';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 
 interface TaskTimerProps {
-  task: Task | null;
+  task?: Task | undefined;
   className?: string;
 }
 

@@ -6,7 +6,7 @@ import './FloatingTimer.css';
 
 export function FloatingTimer() {
   const db = useDatabase();
-  const [currentTask, setCurrentTask] = useState<Task | null>(null);
+  const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
@@ -40,7 +40,7 @@ export function FloatingTimer() {
   const loadCurrentTask = async () => {
     try {
       const task = await db.getCurrentTask();
-      setCurrentTask(task || null);
+      setCurrentTask(task || undefined);
     } catch (error) {
       console.error('Failed to fetch current task:', error);
     }
