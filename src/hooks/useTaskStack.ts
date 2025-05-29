@@ -138,7 +138,7 @@ export function useTaskStack() {
     
     const loadTasksWithSignal = async () => {
       try {
-        const tasks = await db.getTaskStack(abortController.signal);
+        const tasks = await db.getTaskStack({ signal: abortController.signal });
         if (!abortController.signal.aborted) {
           dispatch({ type: 'LOAD_TASKS', tasks });
           setLoading(false);

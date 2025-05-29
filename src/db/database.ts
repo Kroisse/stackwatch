@@ -1,7 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { Task } from '../utils/task';
 import { BroadcastMessage } from '../types/broadcast';
-import { abortable } from './decorators';
+import { abortable, AbortableOptions } from './decorators';
 
 export interface DBTask {
   id?: number;
@@ -52,7 +52,7 @@ export class StackWatchDatabase extends Dexie {
 
   // Get current active task (highest stack_position with no ended_at)
   @abortable
-  async getCurrentTask(_signal?: AbortSignal): Promise<Task | undefined> {
+  async getCurrentTask(_options?: AbortableOptions): Promise<Task | undefined> {
     // Use index to get active tasks efficiently
     const activeTasks = this.tasks
       .where('ended_at')
@@ -71,7 +71,7 @@ export class StackWatchDatabase extends Dexie {
 
   // Get all active tasks in stack order
   @abortable
-  async getTaskStack(_signal?: AbortSignal): Promise<Task[]> {
+  async getTaskStack(_options?: AbortableOptions): Promise<Task[]> {
     // Use index to get active tasks efficiently
     const activeTasks = await this.tasks
       .where('ended_at')

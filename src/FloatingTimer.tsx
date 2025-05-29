@@ -53,7 +53,7 @@ export function FloatingTimer() {
     
     const loadTask = async () => {
       try {
-        const task = await db.getCurrentTask(abortController.signal);
+        const task = await db.getCurrentTask({ signal: abortController.signal });
         if (!abortController.signal.aborted) {
           setCurrentTask(task ?? undefined);
         }
@@ -84,7 +84,7 @@ export function FloatingTimer() {
         case 'task-updated':
           void (async () => {
             try {
-              const task = await db.getCurrentTask(abortController.signal);
+              const task = await db.getCurrentTask({ signal: abortController.signal });
               if (!abortController.signal.aborted) {
                 setCurrentTask(task ?? undefined);
               }
