@@ -134,8 +134,29 @@ export function useTaskStack() {
 
   // Initial load
   useEffect(() => {
-    void loadTasks();
-  }, [loadTasks]);
+    const abortController = new AbortController();
+    
+    const loadTasksWithSignal = async () => {
+      try {
+        const tasks = await db.getTaskStack(abortController.signal);
+        if (!abortController.signal.aborted) {
+          dispatch({ type: 'LOAD_TASKS', tasks });
+          setLoading(false);
+        }
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          console.error('Failed to fetch tasks:', error);
+          setLoading(false);
+        }
+      }
+    };
+    
+    void loadTasksWithSignal();
+    
+    return () => {
+      abortController.abort();
+    };
+  }, [db]);
 
   // Shared BroadcastChannel for both listening and sending
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -170,7 +191,7 @@ export function useTaskStack() {
       channel.close();
       channelRef.current = null;
     };
-  }, [loadTasks]);
+  }, []);
 
   // No need for manual broadcast - database handles it now
 

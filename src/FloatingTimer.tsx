@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Task, getDisplayTaskTitle } from './utils/task';
 import { useDatabase } from './hooks/useDatabase';
 import { TaskTimer } from './components/TaskTimer';
@@ -46,24 +46,35 @@ export function FloatingTimer() {
     setIsDragging(false);
   };
 
-  // Load current task from database
-  const loadCurrentTask = useCallback(async () => {
-    try {
-      const task = await db.getCurrentTask();
-      setCurrentTask(task ?? undefined);
-    } catch (error) {
-      console.error('Failed to fetch current task:', error);
-    }
-  }, [db]);
 
   // Load initial task info
   useEffect(() => {
-    void loadCurrentTask();
-  }, [loadCurrentTask]);
+    const abortController = new AbortController();
+    
+    const loadTask = async () => {
+      try {
+        const task = await db.getCurrentTask(abortController.signal);
+        if (!abortController.signal.aborted) {
+          setCurrentTask(task ?? undefined);
+        }
+      } catch (error) {
+        if (!abortController.signal.aborted) {
+          console.error('Failed to fetch current task:', error);
+        }
+      }
+    };
+    
+    void loadTask();
+    
+    return () => {
+      abortController.abort();
+    };
+  }, [db]);
 
   // Listen for database changes via BroadcastChannel
   useEffect(() => {
     const channel = new BroadcastChannel('stackwatch-db');
+    const abortController = new AbortController();
     
     const handleMessage = (event: MessageEvent<{type: string}>) => {
       // Handle various event types from database
@@ -71,7 +82,18 @@ export function FloatingTimer() {
         case 'task-created':
         case 'task-popped':
         case 'task-updated':
-          void loadCurrentTask();
+          void (async () => {
+            try {
+              const task = await db.getCurrentTask(abortController.signal);
+              if (!abortController.signal.aborted) {
+                setCurrentTask(task ?? undefined);
+              }
+            } catch (error) {
+              if (!abortController.signal.aborted) {
+                console.error('Failed to fetch current task:', error);
+              }
+            }
+          })();
           break;
       }
     };
@@ -79,10 +101,11 @@ export function FloatingTimer() {
     channel.addEventListener('message', handleMessage);
     
     return () => {
+      abortController.abort();
       channel.removeEventListener('message', handleMessage);
       channel.close();
     };
-  }, [loadCurrentTask]);
+  }, [db]);
 
   return (
     <div
