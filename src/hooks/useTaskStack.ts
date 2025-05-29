@@ -160,11 +160,6 @@ export function useTaskStack() {
         case 'task-updated':
           dispatch({ type: 'TASK_UPDATED', task: message.task });
           break;
-
-        case 'stack-updated':
-          // Full reload needed for complex stack changes
-          loadTasks();
-          break;
       }
     };
 

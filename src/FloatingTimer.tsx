@@ -61,7 +61,6 @@ export function FloatingTimer() {
         case 'task-created':
         case 'task-popped':
         case 'task-updated':
-        case 'stack-updated':
           loadCurrentTask();
           break;
       }
