@@ -1,9 +1,0 @@
-{% extends "base.html" %}
-
-{% block contents %}
-<form method="post" action="{{ url_for('push_task') }}" class="form-vertical">
-  <label for="title">Title</label>
-  <input id="title" type="text" name="title" />
-  <button type="submit" class="btn">Push</button>
-</form>
-{% endblock %}

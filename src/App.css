@@ -1,0 +1,265 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+
+  color: #0f0f0f;
+  background-color: #f6f6f6;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  margin: 0;
+  padding: 2rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Current Task Section */
+.current-task-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.current-task-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.current-task {
+  text-align: center;
+}
+
+
+.task-context {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+
+.task-timer {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+  margin: 1rem 0;
+}
+
+/* Context editing */
+
+.context-edit-form {
+  margin: 1rem 0;
+}
+
+.context-edit-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #333;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.context-edit-form textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+  background-color: white;
+}
+
+.context-edit-form textarea::placeholder {
+  color: #999;
+}
+
+
+/* Task Controls */
+.task-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #1a1a1a;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background-color: #333;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.push-btn {
+  background-color: #28a745;
+  min-width: 120px;
+}
+
+.push-btn:hover {
+  background-color: #218838;
+}
+
+.pop-btn {
+  background-color: #dc3545;
+  min-width: 120px;
+}
+
+.pop-btn:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+/* Task Stack Section */
+.task-stack-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.task-stack-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.task-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  transition: all 0.2s;
+}
+
+.task-item.active {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.task-info h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.task-info .task-context {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.task-duration {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: #666;
+}
+
+.task-duration .task-timer {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background-color: #2f2f2f;
+  }
+
+  .current-task-section,
+  .task-stack-section {
+    background: #1a1a1a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+
+  .task-timer {
+    color: #00ff88;
+  }
+
+  .task-context {
+    color: #aaa;
+  }
+
+
+  button {
+    background-color: #0066cc;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #0052a3;
+  }
+
+  .task-item {
+    background: #2f2f2f;
+    border-color: #444;
+  }
+
+  .task-item.active {
+    background: #1e3a5f;
+    border-color: #2196f3;
+  }
+
+  .task-info h4 {
+    color: #f6f6f6;
+  }
+
+  .task-duration {
+    color: #aaa;
+  }
+
+  .context-edit-form textarea {
+    background: #2f2f2f;
+    border-color: #444;
+    color: #f6f6f6;
+  }
+
+  .push-btn {
+    background-color: #28a745;
+  }
+
+  .push-btn:hover {
+    background-color: #218838;
+  }
+
+  .pop-btn {
+    background-color: #dc3545;
+  }
+
+  .pop-btn:hover:not(:disabled) {
+    background-color: #c82333;
+  }
+}
