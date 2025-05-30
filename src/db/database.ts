@@ -167,9 +167,10 @@ export class StackWatchDatabase extends Dexie {
   }
 
 
-  // Cleanup method to close the BroadcastChannel
+  // Override Dexie's close method to also close the BroadcastChannel
   close(): void {
     this.channel.close();
+    super.close();
   }
 }
 
