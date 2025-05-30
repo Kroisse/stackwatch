@@ -5,7 +5,12 @@ interface TaskControlsProps {
   canPopTask: boolean;
 }
 
-export function TaskControls({ onPushTask, onPopTask, onToggleTimer, canPopTask }: TaskControlsProps) {
+export function TaskControls({
+  onPushTask,
+  onPopTask,
+  onToggleTimer,
+  canPopTask,
+}: TaskControlsProps) {
   return (
     <div className="task-controls">
       <button onClick={onPushTask} className="push-btn">

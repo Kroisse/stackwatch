@@ -14,7 +14,7 @@ export interface AbortableOptions {
  */
 export function abortable<This extends DexieWithTasks, Return>(
   target: (this: This, options?: AbortableOptions) => Promise<Return>,
-  _context: ClassMethodDecoratorContext<This>
+  _context: ClassMethodDecoratorContext<This>,
 ) {
   return function (this: This, options?: AbortableOptions): Promise<Return> {
     // Extract signal from options
@@ -30,7 +30,9 @@ export function abortable<This extends DexieWithTasks, Return>(
 
     // Track if we should abort the transaction
     let shouldAbort = false;
-    const abortHandler = () => { shouldAbort = true; };
+    const abortHandler = () => {
+      shouldAbort = true;
+    };
     signal.addEventListener('abort', abortHandler);
 
     // Wrap in transaction to enable abort
@@ -70,9 +72,8 @@ export function abortable<This extends DexieWithTasks, Return>(
  */
 export function abortableRW<This extends Dexie, Args extends unknown[], Return>(
   target: (this: This, ...args: Args) => Promise<Return>,
-  _context: ClassMethodDecoratorContext<This>
+  _context: ClassMethodDecoratorContext<This>,
 ) {
-
   return function (this: This, ...args: Args): Promise<Return> {
     // Check if last argument is AbortSignal
     const lastArg = args[args.length - 1];

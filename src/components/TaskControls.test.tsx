@@ -8,11 +8,11 @@ describe('TaskControls', () => {
       onPushTask: vi.fn(),
       onPopTask: vi.fn(),
       onToggleTimer: vi.fn(),
-      canPopTask: true
+      canPopTask: true,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
-    
+
     expect(getByText('Push Task')).toBeInTheDocument();
     expect(getByText('Pop Task')).toBeInTheDocument();
     expect(getByText('Toggle Timer')).toBeInTheDocument();
@@ -24,12 +24,12 @@ describe('TaskControls', () => {
       onPushTask,
       onPopTask: vi.fn(),
       onToggleTimer: vi.fn(),
-      canPopTask: true
+      canPopTask: true,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
     fireEvent.click(getByText('Push Task'));
-    
+
     expect(onPushTask).toHaveBeenCalledTimes(1);
   });
 
@@ -39,12 +39,12 @@ describe('TaskControls', () => {
       onPushTask: vi.fn(),
       onPopTask,
       onToggleTimer: vi.fn(),
-      canPopTask: true
+      canPopTask: true,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
     fireEvent.click(getByText('Pop Task'));
-    
+
     expect(onPopTask).toHaveBeenCalledTimes(1);
   });
 
@@ -54,12 +54,12 @@ describe('TaskControls', () => {
       onPushTask: vi.fn(),
       onPopTask: vi.fn(),
       onToggleTimer,
-      canPopTask: true
+      canPopTask: true,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
     fireEvent.click(getByText('Toggle Timer'));
-    
+
     expect(onToggleTimer).toHaveBeenCalledTimes(1);
   });
 
@@ -68,12 +68,12 @@ describe('TaskControls', () => {
       onPushTask: vi.fn(),
       onPopTask: vi.fn(),
       onToggleTimer: vi.fn(),
-      canPopTask: false
+      canPopTask: false,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
     const popButton = getByText('Pop Task');
-    
+
     expect(popButton).toBeDisabled();
   });
 
@@ -83,13 +83,13 @@ describe('TaskControls', () => {
       onPushTask: vi.fn(),
       onPopTask,
       onToggleTimer: vi.fn(),
-      canPopTask: false
+      canPopTask: false,
     };
 
     const { getByText } = render(<TaskControls {...props} />);
     const popButton = getByText('Pop Task');
     fireEvent.click(popButton);
-    
+
     expect(onPopTask).not.toHaveBeenCalled();
   });
 });

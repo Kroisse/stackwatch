@@ -16,7 +16,7 @@ describe('StackWatchDatabase', () => {
 
     global.BroadcastChannel = vi.fn().mockImplementation(() => ({
       postMessage: mockPostMessage,
-      close: vi.fn()
+      close: vi.fn(),
     }));
 
     // Create fresh database instance with unique name
@@ -46,7 +46,7 @@ describe('StackWatchDatabase', () => {
         stack_position: 0,
         created_at: now,
         ended_at: 0,
-        updated_at: now
+        updated_at: now,
       };
 
       const task = dbTaskToTask(dbTask);
@@ -57,7 +57,7 @@ describe('StackWatchDatabase', () => {
         stack_position: 0,
         created_at: now,
         ended_at: undefined,
-        updated_at: now
+        updated_at: now,
       });
     });
 
@@ -70,7 +70,7 @@ describe('StackWatchDatabase', () => {
         stack_position: 0,
         created_at: now,
         ended_at: endedAt,
-        updated_at: endedAt
+        updated_at: endedAt,
       };
 
       const task = dbTaskToTask(dbTask);
@@ -84,7 +84,7 @@ describe('StackWatchDatabase', () => {
         stack_position: 0,
         created_at: new Date(),
         ended_at: 0,
-        updated_at: new Date()
+        updated_at: new Date(),
       };
 
       expect(() => dbTaskToTask(dbTask)).toThrow('Task must have an id');
@@ -124,8 +124,8 @@ describe('StackWatchDatabase', () => {
       expect(broadcastMessages[0]).toMatchObject({
         type: 'task-created',
         task: expect.objectContaining({
-          context: 'New task'
-        })
+          context: 'New task',
+        }),
       });
     });
   });
@@ -194,7 +194,7 @@ describe('StackWatchDatabase', () => {
       const tasks = await db.getTaskStack();
 
       expect(tasks).toHaveLength(2);
-      expect(tasks.every(t => t.context !== 'Task 3')).toBe(true);
+      expect(tasks.every((t) => t.context !== 'Task 3')).toBe(true);
     });
   });
 
@@ -227,8 +227,8 @@ describe('StackWatchDatabase', () => {
       expect(broadcastMessages[0]).toMatchObject({
         type: 'task-popped',
         task: expect.objectContaining({
-          context: 'Task to pop'
-        })
+          context: 'Task to pop',
+        }),
       });
     });
 
@@ -248,17 +248,21 @@ describe('StackWatchDatabase', () => {
       const task = await db.pushTask('Original context');
 
       // Wait a bit to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const updatedTask = await db.updateTask(task.id, 'Updated context');
 
       expect(updatedTask).toHaveProperty('id', task.id);
       expect(updatedTask.context).toBe('Updated context');
-      expect(updatedTask.updated_at.getTime()).toBeGreaterThanOrEqual(task.updated_at.getTime());
+      expect(updatedTask.updated_at.getTime()).toBeGreaterThanOrEqual(
+        task.updated_at.getTime(),
+      );
     });
 
     it('should throw error when task not found', async () => {
-      await expect(db.updateTask(999, 'New context')).rejects.toThrow('Task not found');
+      await expect(db.updateTask(999, 'New context')).rejects.toThrow(
+        'Task not found',
+      );
     });
 
     it('should broadcast task-updated event', async () => {
@@ -274,8 +278,8 @@ describe('StackWatchDatabase', () => {
       expect(broadcastMessages[0]).toMatchObject({
         type: 'task-updated',
         task: expect.objectContaining({
-          context: 'Updated'
-        })
+          context: 'Updated',
+        }),
       });
     });
   });

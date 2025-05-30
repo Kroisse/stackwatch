@@ -5,7 +5,7 @@ import {
   getTaskDescription,
   isTaskActive,
   formatDuration,
-  type Task
+  type Task,
 } from './task';
 
 describe('Task utility functions', () => {
@@ -19,7 +19,7 @@ describe('Task utility functions', () => {
       context: 'First line title\nSecond line description\nThird line',
       stack_position: 0,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     };
   });
 
@@ -32,7 +32,7 @@ describe('Task utility functions', () => {
     it('should trim whitespace from title', () => {
       const taskWithSpaces = {
         ...mockTask,
-        context: '  Spaced title  \nDescription'
+        context: '  Spaced title  \nDescription',
       };
       const result = getTaskTitle(taskWithSpaces);
       expect(result).toBe('Spaced title');
@@ -103,7 +103,7 @@ describe('Task utility functions', () => {
     it('should remove leading newline if present', () => {
       const taskWithLeadingNewline = {
         ...mockTask,
-        context: 'Title\n\nDescription with leading newline'
+        context: 'Title\n\nDescription with leading newline',
       };
       const result = getTaskDescription(taskWithLeadingNewline);
       expect(result).toBe('Description with leading newline');
@@ -112,7 +112,7 @@ describe('Task utility functions', () => {
     it('should handle multiple newlines properly', () => {
       const multiNewlineTask = {
         ...mockTask,
-        context: 'Title\n\nLine 1\n\nLine 2'
+        context: 'Title\n\nLine 1\n\nLine 2',
       };
       const result = getTaskDescription(multiNewlineTask);
       expect(result).toBe('Line 1\n\nLine 2');
@@ -177,5 +177,4 @@ describe('Task utility functions', () => {
       expect(result).toBe('00:00:00');
     });
   });
-
 });

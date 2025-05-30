@@ -22,27 +22,27 @@ export interface EfficientTaskStack {
 export function getTaskTitle(task: Task): string {
   // Handle leading/trailing newlines by trimming the entire context first
   const trimmedContext = task.context.trim();
-  if (!trimmedContext) return "";
+  if (!trimmedContext) return '';
 
   // Use regex to extract first line more efficiently
   const firstLineMatch = /^[^\n]*/.exec(trimmedContext);
-  return firstLineMatch ? firstLineMatch[0].trim() : "";
+  return firstLineMatch ? firstLineMatch[0].trim() : '';
 }
 
 // Helper function for displaying task title with fallback
 export function getDisplayTaskTitle(task: Task): string {
   const title = getTaskTitle(task);
-  return title || "Untitled Task";
+  return title || 'Untitled Task';
 }
 
 export function getTaskDescription(task: Task): string {
   // Handle leading/trailing newlines by trimming the entire context first
   const trimmedContext = task.context.trim();
-  if (!trimmedContext) return "";
+  if (!trimmedContext) return '';
 
   // Use regex to extract everything after the first line more efficiently
   const descriptionMatch = /^[^\n]*\n(.*)$/s.exec(trimmedContext);
-  if (!descriptionMatch) return ""; // No newline found, single line
+  if (!descriptionMatch) return ''; // No newline found, single line
 
   // Remove leading newline if present (preserve existing behavior)
   return descriptionMatch[1].replace(/^\n/, '');
@@ -61,7 +61,7 @@ export function isTaskActive(task: Task): boolean {
 export function formatElapsedTime(startDate: Date, endDate?: Date): string {
   const end = endDate ?? new Date();
   const diffMs = end.getTime() - startDate.getTime();
-  
+
   const totalSeconds = Math.floor(diffMs / 1000);
   return formatDuration(totalSeconds);
 }
@@ -78,4 +78,3 @@ export function formatDuration(totalSeconds: number): string {
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
-

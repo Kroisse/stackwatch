@@ -7,7 +7,10 @@ interface CurrentTaskProps {
   onUpdateTask: (taskId: number, context: string) => Promise<void>;
 }
 
-export function CurrentTask({ task: currentTask, onUpdateTask }: CurrentTaskProps) {
+export function CurrentTask({
+  task: currentTask,
+  onUpdateTask,
+}: CurrentTaskProps) {
   const [editingContext, setEditingContext] = useState('');
 
   // Update editing context when current task changes

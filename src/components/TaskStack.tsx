@@ -1,4 +1,9 @@
-import { Task, getDisplayTaskTitle, getTaskDescription, isTaskActive } from '../utils/task';
+import {
+  Task,
+  getDisplayTaskTitle,
+  getTaskDescription,
+  isTaskActive,
+} from '../utils/task';
 import { TaskTimer } from './TaskTimer';
 
 interface TaskStackProps {

@@ -13,5 +13,5 @@ ReactDOM.createRoot(rootElement).render(
     <DatabaseProvider>
       <FloatingTimer />
     </DatabaseProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

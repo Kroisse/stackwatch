@@ -5,15 +5,16 @@ import { Task } from '../utils/task';
 
 // Mock the TaskTimer component
 vi.mock('./TaskTimer', () => ({
-  TaskTimer: ({ task }: { task?: Task }) =>
+  TaskTimer: ({ task }: { task?: Task }) => (
     <span>Timer: {task ? `Task ${task.id}` : 'Idle'}</span>
+  ),
 }));
 
 describe('CurrentTask', () => {
   it('renders idle state when no current task', () => {
     const onUpdateTask = vi.fn();
     const { getByText } = render(
-      <CurrentTask task={undefined} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={undefined} onUpdateTask={onUpdateTask} />,
     );
 
     expect(getByText('Current Task')).toBeInTheDocument();
@@ -27,12 +28,12 @@ describe('CurrentTask', () => {
       context: 'Test task\nWith description',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText, getByText } = render(
-      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />,
     );
 
     const textarea = getByPlaceholderText(/Task name/);
@@ -46,12 +47,12 @@ describe('CurrentTask', () => {
       context: 'Original text',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText } = render(
-      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />,
     );
 
     const textarea = getByPlaceholderText(/Task name/);
@@ -66,12 +67,12 @@ describe('CurrentTask', () => {
       context: 'Original text',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const onUpdateTask = vi.fn();
 
     const { getByPlaceholderText } = render(
-      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />,
     );
 
     const textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
@@ -89,19 +90,19 @@ describe('CurrentTask', () => {
       context: 'Task 1',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const task2: Task = {
       id: 2,
       context: 'Task 2',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const onUpdateTask = vi.fn();
 
     const { rerender, getByPlaceholderText } = render(
-      <CurrentTask task={task1} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task1} onUpdateTask={onUpdateTask} />,
     );
 
     let textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;
@@ -119,12 +120,12 @@ describe('CurrentTask', () => {
       context: 'Task 1',
       stack_position: 0,
       created_at: new Date(),
-      updated_at: new Date()
+      updated_at: new Date(),
     };
     const onUpdateTask = vi.fn();
 
     const { rerender, getByPlaceholderText, queryByPlaceholderText } = render(
-      <CurrentTask task={task} onUpdateTask={onUpdateTask} />
+      <CurrentTask task={task} onUpdateTask={onUpdateTask} />,
     );
 
     const textarea = getByPlaceholderText(/Task name/) as HTMLTextAreaElement;

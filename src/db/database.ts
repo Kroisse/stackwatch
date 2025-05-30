@@ -8,7 +8,7 @@ export interface DBTask {
   context: string;
   stack_position: number;
   created_at: Date;
-  ended_at: Date | 0;  // 0 for active tasks, Date for ended tasks
+  ended_at: Date | 0; // 0 for active tasks, Date for ended tasks
   updated_at: Date;
 }
 
@@ -22,10 +22,9 @@ export function dbTaskToTask(dbTask: DBTask): Task {
     stack_position: dbTask.stack_position,
     created_at: dbTask.created_at,
     ended_at: dbTask.ended_at === 0 ? undefined : dbTask.ended_at,
-    updated_at: dbTask.updated_at
+    updated_at: dbTask.updated_at,
   };
 }
-
 
 export class StackWatchDatabase extends Dexie {
   tasks!: Table<DBTask>;
@@ -38,7 +37,7 @@ export class StackWatchDatabase extends Dexie {
     // Note: 'is_active' would be better than 'ended_at' for indexing
     // but keeping ended_at for compatibility
     this.version(1).stores({
-      tasks: '++id, stack_position, ended_at, created_at'
+      tasks: '++id, stack_position, ended_at, created_at',
     });
 
     // Initialize BroadcastChannel for cross-tab communication
@@ -54,9 +53,7 @@ export class StackWatchDatabase extends Dexie {
   @abortable
   async getCurrentTask(_options?: AbortableOptions): Promise<Task | undefined> {
     // Use index to get active tasks efficiently
-    const activeTasks = this.tasks
-      .where('ended_at')
-      .equals(0);
+    const activeTasks = this.tasks.where('ended_at').equals(0);
 
     // Find task with highest stack_position
     let highestTask: DBTask | undefined;
@@ -81,17 +78,15 @@ export class StackWatchDatabase extends Dexie {
     // Sort by stack_position descending
     activeTasks.reverse();
 
-    return activeTasks.map(task => dbTaskToTask(task));
+    return activeTasks.map((task) => dbTaskToTask(task));
   }
 
   // Push a new task to the stack
-  async pushTask(context = "New Task"): Promise<Task> {
+  async pushTask(context = 'New Task'): Promise<Task> {
     const now = new Date();
 
     // Get highest stack position
-    const activeTasks = this.tasks
-      .where('ended_at')
-      .equals(0);
+    const activeTasks = this.tasks.where('ended_at').equals(0);
 
     let maxPosition = -1;
     await activeTasks.each((task) => {
@@ -102,18 +97,18 @@ export class StackWatchDatabase extends Dexie {
       context,
       stack_position: maxPosition + 1,
       created_at: now,
-      ended_at: 0,  // Active task
-      updated_at: now
+      ended_at: 0, // Active task
+      updated_at: now,
     };
 
-    const id = await this.tasks.add(newTask) as number;
+    const id = (await this.tasks.add(newTask)) as number;
     const task = dbTaskToTask({ ...newTask, id });
 
     // Broadcast task creation event
     this.broadcast({
       type: 'task-created',
       task: task,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return task;
@@ -127,7 +122,7 @@ export class StackWatchDatabase extends Dexie {
     const now = new Date();
     await this.tasks.update(currentTask.id, {
       ended_at: now,
-      updated_at: now
+      updated_at: now,
     });
 
     const poppedTask = { ...currentTask, ended_at: now, updated_at: now };
@@ -136,7 +131,7 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-popped',
       task: poppedTask,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return poppedTask;
@@ -148,7 +143,7 @@ export class StackWatchDatabase extends Dexie {
 
     await this.tasks.update(id, {
       context,
-      updated_at: now
+      updated_at: now,
     });
 
     const task = await this.tasks.get(id);
@@ -160,12 +155,11 @@ export class StackWatchDatabase extends Dexie {
     this.broadcast({
       type: 'task-updated',
       task: updatedTask,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return updatedTask;
   }
-
 
   // Override Dexie's close method to also close the BroadcastChannel
   close(): void {
@@ -173,5 +167,3 @@ export class StackWatchDatabase extends Dexie {
     super.close();
   }
 }
-
-// No longer exporting singleton - use DatabaseContext instead
