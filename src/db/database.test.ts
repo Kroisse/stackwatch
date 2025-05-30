@@ -118,13 +118,13 @@ describe('StackWatchDatabase', () => {
     });
 
     it('should broadcast task-created event', async () => {
-      await db.pushTask('New task');
+      await db.pushTask('Eat lunch');
 
       expect(mockPostMessage).toHaveBeenCalledTimes(1);
       expect(broadcastMessages[0]).toMatchObject({
         type: 'task-created',
         task: expect.objectContaining({
-          context: 'New task',
+          context: 'Eat lunch',
         }),
       });
     });
