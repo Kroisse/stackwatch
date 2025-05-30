@@ -14,7 +14,28 @@ pub async fn toggle_floating_window(window: WebviewWindow) -> Result<()> {
             }
             Ok(())
         }
-        None => Err(Error::window_not_found("floating")),
+        None => {
+            // The floating window is defined in tauri.conf.json with "closable": false
+            // If it doesn't exist here, something went wrong
+            // We could try to recreate it, but let's match the config settings
+            tauri::WebviewWindowBuilder::new(
+                app_handle,
+                "floating",
+                tauri::WebviewUrl::App("floating.html".into()),
+            )
+            .title("")  // Empty title as per config
+            .inner_size(300.0, 80.0)  // Match config dimensions
+            .resizable(false)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .minimizable(false)
+            .closable(false)
+            .decorations(false)  // This achieves titleBarStyle: "Overlay" effect
+            .visible(true)  // Show it immediately since we're toggling
+            .build()?;
+
+            Ok(())
+        }
     }
 }
 
