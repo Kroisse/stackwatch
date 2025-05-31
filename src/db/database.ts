@@ -50,7 +50,7 @@ export class StackWatchDatabase extends Dexie {
   }
 
   // Get current active task (highest stack_position with no ended_at)
-  @abortable
+  @abortable('r')
   async getCurrentTask(_options?: AbortableOptions): Promise<Task | undefined> {
     // Use index to get active tasks efficiently
     const activeTasks = this.tasks.where('ended_at').equals(0);
@@ -67,7 +67,7 @@ export class StackWatchDatabase extends Dexie {
   }
 
   // Get all active tasks in stack order
-  @abortable
+  @abortable('r')
   async getTaskStack(_options?: AbortableOptions): Promise<Task[]> {
     // Use index to get active tasks efficiently
     const activeTasks = await this.tasks
