@@ -4,20 +4,20 @@ interface DexieWithTasks extends Dexie {
   tasks: Table<unknown>;
 }
 
-export interface AbortableOptions {
+export interface TransactionalOptions {
   signal?: AbortSignal;
 }
 
 // Type aliases to reduce duplication
-type AbortableMethod<This, Return> = (
+type TransactionalMethod<This, Return> = (
   this: This,
-  options?: AbortableOptions,
+  options?: TransactionalOptions,
 ) => Promise<Return>;
 
-type AbortableDecorator<This, Return> = (
-  target: AbortableMethod<This, Return>,
+type TransactionalDecorator<This, Return> = (
+  target: TransactionalMethod<This, Return>,
   context: ClassMethodDecoratorContext<This>,
-) => AbortableMethod<This, Return>;
+) => TransactionalMethod<This, Return>;
 
 class SignalScope implements AsyncDisposable {
   #signal: AbortSignal;
@@ -36,12 +36,12 @@ class SignalScope implements AsyncDisposable {
 }
 
 /**
- * Decorator to make a database method cancellable with AbortSignal
+ * Decorator to wrap a database method in a transaction with optional AbortSignal support
  * @param mode - Transaction mode ('r' for read-only, 'rw' for read-write)
  */
-export function abortable<This extends DexieWithTasks, Return>(
+export function transactional<This extends DexieWithTasks, Return>(
   mode: TransactionMode,
-): AbortableDecorator<This, Return> {
+): TransactionalDecorator<This, Return> {
   return (target, _context) => {
     return async function (this, options?) {
       // Extract signal from options
