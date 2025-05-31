@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use crate::error::Result;
 use tauri::{Manager, WebviewWindow};
 
 #[tauri::command]
@@ -23,15 +23,15 @@ pub async fn toggle_floating_window(window: WebviewWindow) -> Result<()> {
                 "floating",
                 tauri::WebviewUrl::App("floating.html".into()),
             )
-            .title("")  // Empty title as per config
-            .inner_size(300.0, 80.0)  // Match config dimensions
+            .title("") // Empty title as per config
+            .inner_size(300.0, 80.0) // Match config dimensions
             .resizable(false)
             .always_on_top(true)
             .skip_taskbar(true)
             .minimizable(false)
             .closable(false)
-            .decorations(false)  // This achieves titleBarStyle: "Overlay" effect
-            .visible(true)  // Show it immediately since we're toggling
+            .decorations(false) // This achieves titleBarStyle: "Overlay" effect
+            .visible(true) // Show it immediately since we're toggling
             .build()?;
 
             Ok(())

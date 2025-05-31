@@ -20,7 +20,7 @@ export function FloatingTimer() {
   const handleMouseMove = (e: React.MouseEvent) => {
     const distance = Math.sqrt(
       Math.pow(e.clientX - dragStart.x, 2) +
-      Math.pow(e.clientY - dragStart.y, 2)
+        Math.pow(e.clientY - dragStart.y, 2),
     );
     if (distance > 5) {
       setIsDragging(true);
@@ -46,14 +46,15 @@ export function FloatingTimer() {
     setIsDragging(false);
   };
 
-
   // Load initial task info
   useEffect(() => {
     const abortController = new AbortController();
-    
+
     const loadTask = async () => {
       try {
-        const task = await db.getCurrentTask({ signal: abortController.signal });
+        const task = await db.getCurrentTask({
+          signal: abortController.signal,
+        });
         if (!abortController.signal.aborted) {
           setCurrentTask(task ?? undefined);
         }
@@ -63,9 +64,9 @@ export function FloatingTimer() {
         }
       }
     };
-    
+
     void loadTask();
-    
+
     return () => {
       abortController.abort();
     };
@@ -75,8 +76,8 @@ export function FloatingTimer() {
   useEffect(() => {
     const channel = new BroadcastChannel('stackwatch-db');
     const abortController = new AbortController();
-    
-    const handleMessage = (event: MessageEvent<{type: string}>) => {
+
+    const handleMessage = (event: MessageEvent<{ type: string }>) => {
       // Handle various event types from database
       switch (event.data.type) {
         case 'task-created':
@@ -84,7 +85,9 @@ export function FloatingTimer() {
         case 'task-updated':
           void (async () => {
             try {
-              const task = await db.getCurrentTask({ signal: abortController.signal });
+              const task = await db.getCurrentTask({
+                signal: abortController.signal,
+              });
               if (!abortController.signal.aborted) {
                 setCurrentTask(task ?? undefined);
               }
@@ -97,9 +100,9 @@ export function FloatingTimer() {
           break;
       }
     };
-    
+
     channel.addEventListener('message', handleMessage);
-    
+
     return () => {
       abortController.abort();
       channel.removeEventListener('message', handleMessage);

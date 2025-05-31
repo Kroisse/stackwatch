@@ -5,7 +5,7 @@ import { Task } from '../utils/task';
 
 // Mock the useCurrentTime hook instead of TaskTimer component
 vi.mock('../hooks/useCurrentTime', () => ({
-  useCurrentTime: () => new Date('2024-01-01T12:00:00')
+  useCurrentTime: () => new Date('2024-01-01T12:00:00'),
 }));
 
 describe('TaskStack', () => {
@@ -19,7 +19,7 @@ describe('TaskStack', () => {
   });
   it('renders empty state when no tasks', () => {
     const { getByText } = render(<TaskStack tasks={[]} />);
-    
+
     expect(getByText('Task Stack')).toBeInTheDocument();
     expect(getByText('No tasks in stack')).toBeInTheDocument();
   });
@@ -31,23 +31,23 @@ describe('TaskStack', () => {
         context: 'First task',
         stack_position: 1,
         created_at: new Date('2024-01-01T11:00:00'),
-        updated_at: new Date('2024-01-01T11:00:00')
+        updated_at: new Date('2024-01-01T11:00:00'),
       },
       {
         id: 2,
         context: 'Second task\nWith description',
         stack_position: 0,
         created_at: new Date('2024-01-01T11:30:00'),
-        updated_at: new Date('2024-01-01T11:30:00')
-      }
+        updated_at: new Date('2024-01-01T11:30:00'),
+      },
     ];
 
     const { getByText, container } = render(<TaskStack tasks={tasks} />);
-    
+
     expect(getByText('First task')).toBeInTheDocument();
     expect(getByText('Second task')).toBeInTheDocument();
     expect(getByText('With description')).toBeInTheDocument();
-    
+
     // Check that TaskTimer components are rendered with correct time
     const timers = container.querySelectorAll('.task-timer');
     expect(timers).toHaveLength(2);
@@ -62,7 +62,7 @@ describe('TaskStack', () => {
         context: 'Active task',
         stack_position: 0,
         created_at: new Date(),
-        updated_at: new Date()
+        updated_at: new Date(),
       },
       {
         id: 2,
@@ -70,13 +70,13 @@ describe('TaskStack', () => {
         stack_position: 0,
         created_at: new Date(),
         ended_at: new Date(),
-        updated_at: new Date()
-      }
+        updated_at: new Date(),
+      },
     ];
 
     const { container } = render(<TaskStack tasks={tasks} />);
     const taskItems = container.querySelectorAll('.task-item');
-    
+
     expect(taskItems[0]).toHaveClass('active');
     expect(taskItems[1]).not.toHaveClass('active');
   });
@@ -88,12 +88,12 @@ describe('TaskStack', () => {
         context: '',
         stack_position: 0,
         created_at: new Date(),
-        updated_at: new Date()
-      }
+        updated_at: new Date(),
+      },
     ];
 
     const { getByText } = render(<TaskStack tasks={tasks} />);
-    
+
     expect(getByText('Untitled Task')).toBeInTheDocument(); // Default title for empty context
   });
 
@@ -104,12 +104,12 @@ describe('TaskStack', () => {
         context: 'Just a title',
         stack_position: 0,
         created_at: new Date(),
-        updated_at: new Date()
-      }
+        updated_at: new Date(),
+      },
     ];
 
     const { container, getByText } = render(<TaskStack tasks={tasks} />);
-    
+
     expect(getByText('Just a title')).toBeInTheDocument();
     expect(container.querySelector('.task-context')).not.toBeInTheDocument();
   });

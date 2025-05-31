@@ -1,103 +1,95 @@
-import Dexie, { Table } from 'dexie';
+import Dexie, { Table, TransactionMode } from 'dexie';
 
 interface DexieWithTasks extends Dexie {
   tasks: Table<unknown>;
 }
 
-export interface AbortableOptions {
+export interface TransactionalOptions {
   signal?: AbortSignal;
 }
 
-/**
- * Decorator to make a database method cancellable with AbortSignal
- * The method should accept an options object with optional signal
- */
-export function abortable<This extends DexieWithTasks, Return>(
-  target: (this: This, options?: AbortableOptions) => Promise<Return>,
-  _context: ClassMethodDecoratorContext<This>
-) {
-  return function (this: This, options?: AbortableOptions): Promise<Return> {
-    // Extract signal from options
-    const signal = options?.signal;
+// Type aliases to reduce duplication
+type TransactionalMethod<This, Return> = (
+  this: This,
+  options?: TransactionalOptions,
+) => Promise<Return>;
 
-    // If no signal, just call the original method
-    if (!signal) {
-      return target.call(this, options);
-    }
+type TransactionalDecorator<This, Return> = (
+  target: TransactionalMethod<This, Return>,
+  context: ClassMethodDecoratorContext<This>,
+) => TransactionalMethod<This, Return>;
 
-    // Check if already aborted
-    signal.throwIfAborted();
+class SignalScope implements AsyncDisposable {
+  #signal: AbortSignal;
+  #handler: () => void;
 
-    // Track if we should abort the transaction
-    let shouldAbort = false;
-    const abortHandler = () => { shouldAbort = true; };
-    signal.addEventListener('abort', abortHandler);
+  constructor(signal: AbortSignal, handler: () => void) {
+    this.#signal = signal;
+    this.#handler = handler;
+    this.#signal.addEventListener('abort', this.#handler);
+  }
 
-    // Wrap in transaction to enable abort
-    return this.transaction('r', this.tasks, async () => {
-      signal.throwIfAborted();
-
-      // Set up abort on current transaction
-      const tx = Dexie.currentTransaction;
-      if (tx && shouldAbort) {
-        tx.abort();
-      }
-
-      // Re-check abort status
-      if (signal.aborted) {
-        throw new Dexie.AbortError('Operation was aborted');
-      }
-
-      // Listen for future aborts
-      const txAbortHandler = () => {
-        if (tx) tx.abort();
-      };
-      signal.addEventListener('abort', txAbortHandler);
-
-      try {
-        return await target.call(this, options);
-      } finally {
-        signal.removeEventListener('abort', txAbortHandler);
-      }
-    }).finally(() => {
-      signal.removeEventListener('abort', abortHandler);
-    }) as Promise<Return>;
-  };
+  [Symbol.asyncDispose](): Promise<void> {
+    this.#signal.removeEventListener('abort', this.#handler);
+    return Promise.resolve();
+  }
 }
 
 /**
- * Decorator for read-write operations
+ * Decorator to wrap a database method in a transaction with optional AbortSignal support
+ * @param mode - Transaction mode ('r' for read-only, 'rw' for read-write)
  */
-export function abortableRW<This extends Dexie, Args extends unknown[], Return>(
-  target: (this: This, ...args: Args) => Promise<Return>,
-  _context: ClassMethodDecoratorContext<This>
-) {
+export function transactional<This extends DexieWithTasks, Return>(
+  mode: TransactionMode,
+): TransactionalDecorator<This, Return> {
+  return (target, _context) => {
+    return async function (this, options?) {
+      // Extract signal from options
+      const signal = options?.signal;
 
-  return function (this: This, ...args: Args): Promise<Return> {
-    // Check if last argument is AbortSignal
-    const lastArg = args[args.length - 1];
-    const signal = lastArg instanceof AbortSignal ? lastArg : undefined;
+      // Check if already aborted
+      signal?.throwIfAborted();
 
-    // If no signal, just call the original method
-    if (!signal) {
-      return target.apply(this, args);
-    }
-
-    // For write operations, we don't wrap in transaction
-    // as the method itself likely creates its own transaction
-    signal.throwIfAborted();
-
-    const checkAbort = () => {
-      if (signal.aborted) {
-        throw new Dexie.AbortError('Operation was aborted');
+      // If there's already a transaction, just set up abort handling
+      const existingTx = Dexie.currentTransaction;
+      if (existingTx) {
+        if (signal) {
+          await using _txScope = new SignalScope(signal, () => {
+            existingTx.abort();
+            throw new Dexie.AbortError('Operation was aborted');
+          });
+        }
+        return await target.call(this, options);
       }
+
+      // Otherwise, create a new transaction
+      // Track if we should abort the transaction
+      let shouldAbort = false;
+      if (signal) {
+        await using _scope = new SignalScope(signal, () => {
+          shouldAbort = true;
+        });
+      }
+
+      return await this.transaction(mode, this.tasks, async (tx) => {
+        signal?.throwIfAborted();
+
+        // Check if we should abort
+        if (shouldAbort) {
+          tx.abort();
+        }
+
+        // Re-check abort status
+        if (signal?.aborted) {
+          throw new Dexie.AbortError('Operation was aborted');
+        }
+
+        // Listen for future aborts
+        if (signal) {
+          await using _txScope = new SignalScope(signal, () => tx.abort());
+        }
+        return await target.call(this, options);
+      });
     };
-
-    // Periodically check abort status
-    const interval = setInterval(checkAbort, 100);
-
-    return target.apply(this, args).finally(() => {
-      clearInterval(interval);
-    });
   };
 }

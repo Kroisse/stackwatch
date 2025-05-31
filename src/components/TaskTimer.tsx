@@ -26,7 +26,9 @@ export function TaskTimer({ task, className = '' }: TaskTimerProps) {
     if (task) {
       return formatElapsedTime(task.created_at, task.ended_at ?? currentTime);
     }
-    return idleStartTime ? formatElapsedTime(idleStartTime, currentTime) : '00:00:00';
+    return idleStartTime
+      ? formatElapsedTime(idleStartTime, currentTime)
+      : '00:00:00';
   };
 
   const isIdle = !task;

@@ -4,63 +4,67 @@ import { Task, TaskStack, EfficientTaskStack } from '../utils/task';
 import { BroadcastMessage } from '../types/broadcast';
 
 // Action types for the reducer
-type StackAction = 
+type StackAction =
   | { type: 'LOAD_TASKS'; tasks: Task[]; currentTask?: Task }
   | { type: 'TASK_CREATED'; task: Task }
   | { type: 'TASK_POPPED'; taskId: number }
   | { type: 'TASK_UPDATED'; task: Task };
 
 // Reducer function
-function taskStackReducer(state: EfficientTaskStack, action: StackAction): EfficientTaskStack {
+function taskStackReducer(
+  state: EfficientTaskStack,
+  action: StackAction,
+): EfficientTaskStack {
   switch (action.type) {
     case 'LOAD_TASKS': {
-      const taskMap = new Map(action.tasks.map(task => [task.id, task]));
+      const taskMap = new Map(action.tasks.map((task) => [task.id, task]));
       const taskOrder = action.tasks
         .sort((a, b) => a.stack_position - b.stack_position)
-        .map(task => task.id);
-      
+        .map((task) => task.id);
+
       return {
         taskMap,
         taskOrder,
-        currentTaskId: action.currentTask?.id
+        currentTaskId: action.currentTask?.id,
       };
     }
-    
+
     case 'TASK_CREATED': {
       const newMap = new Map(state.taskMap);
       newMap.set(action.task.id, action.task);
-      
+
       return {
         taskMap: newMap,
         taskOrder: [...state.taskOrder, action.task.id],
-        currentTaskId: action.task.id
+        currentTaskId: action.task.id,
       };
     }
-    
+
     case 'TASK_POPPED': {
       const newMap = new Map(state.taskMap);
       newMap.delete(action.taskId);
-      
-      const newOrder = state.taskOrder.filter(id => id !== action.taskId);
-      const newCurrentId = newOrder.length > 0 ? newOrder[newOrder.length - 1] : undefined;
-      
+
+      const newOrder = state.taskOrder.filter((id) => id !== action.taskId);
+      const newCurrentId =
+        newOrder.length > 0 ? newOrder[newOrder.length - 1] : undefined;
+
       return {
         taskMap: newMap,
         taskOrder: newOrder,
-        currentTaskId: newCurrentId
+        currentTaskId: newCurrentId,
       };
     }
-    
+
     case 'TASK_UPDATED': {
       const newMap = new Map(state.taskMap);
       newMap.set(action.task.id, action.task);
-      
+
       return {
         ...state,
-        taskMap: newMap
+        taskMap: newMap,
       };
     }
-    
+
     default:
       return state;
   }
@@ -71,14 +75,17 @@ export function useTaskStack() {
   const [efficientStack, dispatch] = useReducer(taskStackReducer, {
     taskMap: new Map(),
     taskOrder: [],
-    currentTaskId: undefined
+    currentTaskId: undefined,
   });
-  const [loading, setLoading] = useReducer((state: boolean, loaded: boolean) => loaded ? false : state, true);
+  const [loading, setLoading] = useReducer(
+    (state: boolean, loaded: boolean) => (loaded ? false : state),
+    true,
+  );
 
   // Convert EfficientTaskStack to TaskStack for backward compatibility
   const taskStack = useMemo<TaskStack>(() => {
     const tasks = efficientStack.taskOrder
-      .map(id => efficientStack.taskMap.get(id))
+      .map((id) => efficientStack.taskMap.get(id))
       .filter((task): task is Task => task != null);
 
     const current_task = efficientStack.currentTaskId
@@ -103,14 +110,17 @@ export function useTaskStack() {
   }, [db]);
 
   // Push a new task
-  const pushTask = useCallback(async (context?: string) => {
-    try {
-      await db.pushTask(context);
-      // State will be updated via broadcast message
-    } catch (error) {
-      console.error('Failed to push task:', error);
-    }
-  }, [db]);
+  const pushTask = useCallback(
+    async (context?: string) => {
+      try {
+        await db.pushTask(context);
+        // State will be updated via broadcast message
+      } catch (error) {
+        console.error('Failed to push task:', error);
+      }
+    },
+    [db],
+  );
 
   // Pop current task
   const popTask = useCallback(async () => {
@@ -123,19 +133,22 @@ export function useTaskStack() {
   }, [db]);
 
   // Update task context
-  const updateTask = useCallback(async (id: number, context: string) => {
-    try {
-      await db.updateTask(id, context);
-      // State will be updated via broadcast message
-    } catch (error) {
-      console.error('Failed to update task:', error);
-    }
-  }, [db]);
+  const updateTask = useCallback(
+    async (id: number, context: string) => {
+      try {
+        await db.updateTask(id, context);
+        // State will be updated via broadcast message
+      } catch (error) {
+        console.error('Failed to update task:', error);
+      }
+    },
+    [db],
+  );
 
   // Initial load
   useEffect(() => {
     const abortController = new AbortController();
-    
+
     const loadTasksWithSignal = async () => {
       try {
         const tasks = await db.getTaskStack({ signal: abortController.signal });
@@ -150,9 +163,9 @@ export function useTaskStack() {
         }
       }
     };
-    
+
     void loadTasksWithSignal();
-    
+
     return () => {
       abortController.abort();
     };
@@ -201,6 +214,6 @@ export function useTaskStack() {
     pushTask,
     popTask,
     updateTask,
-    reload: loadTasks
+    reload: loadTasks,
   };
 }
